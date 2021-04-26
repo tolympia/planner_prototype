@@ -1,0 +1,35 @@
+Colors.
+
+ColorId : 1  //
+  Background: #a4bdfc
+  Foreground: #1d1d1d
+ColorId : 2  //
+  Background: #7ae7bf
+  Foreground: #1d1d1d
+ColorId : 3  // lavender.
+  Background: #dbadff
+  Foreground: #1d1d1d
+ColorId : 4  // flamingo.
+  Background: #ff887c
+  Foreground: #1d1d1d
+ColorId : 5  // yellow
+  Background: #fbd75b
+  Foreground: #1d1d1d
+ColorId : 6  // peach?
+  Background: #ffb878
+  Foreground: #1d1d1d
+ColorId : 7  // turquoise.
+  Background: #46d6db
+  Foreground: #1d1d1d
+ColorId : 8 // grey
+  Background: #e1e1e1
+  Foreground: #1d1d1d
+ColorId : 9 // blue
+  Background: #5484ed
+  Foreground: #1d1d1d
+ColorId : 10 // green?
+  Background: #51b749
+  Foreground: #1d1d1d
+ColorId : 11 // red
+  Background: #dc2127
+  Foreground: #1d1d1d
