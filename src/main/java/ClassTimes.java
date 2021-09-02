@@ -17,19 +17,18 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
-import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.Events;
-import com.google.api.services.calendar.model.Colors;
-import com.google.api.services.calendar.model.ColorDefinition;
 
 // Java library imports.
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.time.*;
@@ -98,7 +97,7 @@ public class ClassTimes {
       String timezone = "America/New_York";
 
       // Time zone wrangling.
-      LocalDateTime unzonedDateTime = GAPlanner.dateTimeForBlock(targetDate, block, upperclassmen);
+      LocalDateTime unzonedDateTime = GAPlanner21_22.dateTimeForBlock(targetDate, block, upperclassmen);
       System.out.println("Start time for the block:" + unzonedDateTime);
       Instant startInstant = unzonedDateTime.atZone(ZoneId.of(timezone)).toInstant();
 
@@ -114,7 +113,7 @@ public class ClassTimes {
       event.setStart(start);
 
       // Have the event end based on classMinutes duration.
-      int classMinutes = GAPlanner.getClassDuration(targetDate);
+      int classMinutes = GAPlanner21_22.getClassDuration(targetDate, block);
       Instant endInstant = unzonedDateTime.plusMinutes(classMinutes).atZone(ZoneId.of(timezone)).toInstant();
       DateTime endDateTime = new DateTime(endInstant.toString());
       EventDateTime end = new EventDateTime()
@@ -174,7 +173,88 @@ public class ClassTimes {
       } while (pageToken != null);
     }
 
+    public static void parseForm() throws IOException, GeneralSecurityException {
+        // Build a new authorized API client service.
+        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+                .setApplicationName(APPLICATION_NAME)
+                .build();
+
+        Scanner sc = new Scanner(System.in);
+        System.out.println("What is your name?");
+        String username = sc.nextLine();
+        System.out.println("Hi there, " + username + "!");
+
+        String calendarId;
+        if (username.equals("tina")) {
+            calendarId = TINAS_CALENDAR_ID;
+        } else {
+            System.out.println("What's your calendar ID?");
+            calendarId = sc.nextLine();
+        }
+        // Be careful with this!
+        // deleteAllEvents(service);
+
+        // Get list of school days.
+        TreeMap schoolDays = GAPlanner21_22.getSchoolDaysMap();
+        ArrayList<String> schoolDates = new ArrayList<String>(schoolDays.keySet());
+        System.out.println(
+                "Total number of school days in this semester: " + schoolDates.size());
+
+        ArrayList<String> courseNames = new ArrayList<>();
+        ArrayList<String> colors = new ArrayList<>();
+        ArrayList<Integer> upperOrUnder = new ArrayList<>();
+        ArrayList<String> blocks = new ArrayList<>();
+
+        String pathToCsv = "courses.csv";
+        BufferedReader csvReader = new BufferedReader(new FileReader(pathToCsv));
+        String row = csvReader.readLine();  // Skip the header.
+        while ((row = csvReader.readLine()) != null) {
+            String[] data = row.split(",");
+            blocks.add(data[0].toUpperCase());
+            courseNames.add(data[1]);
+            if (data[2].equals("yes")) {
+                upperOrUnder.add(2);
+            } else {
+                upperOrUnder.add(1);
+            }
+            colors.add(data[3]);
+        }
+        csvReader.close();
+
+        for (int i = 0; i < courseNames.size(); i++) {  // Each course.
+            String block = blocks.get(i);
+            String className = courseNames.get(i);
+            boolean upperclassmen = upperOrUnder.get(i) == 2;
+            String colorId = colors.get(i);
+
+            // Generate list of events (classes) to create for this course.
+            ArrayList<Event> allEvents = new ArrayList<Event>();
+            for (int j = 0; j < schoolDays.size(); j++) {
+                // This is iffy. Shouldn't index into a set like this.
+                String dateString = schoolDates.get(j);
+                LocalDate targetDate = LocalDate.parse(dateString);
+                System.out.println("That date is a Day " + schoolDays.get(dateString));
+                if (GAPlanner21_22.isThereClassToday(dateString, block, schoolDays)) {
+                    Event event = setUpClassEvent(targetDate, block, className, upperclassmen, colorId);
+                    allEvents.add(event);
+                } else {
+                    System.out.println("No " + block + " block class that day.");
+                }
+            }
+
+            System.out.println("Generated " + allEvents.size() + " total events.");
+            actuallyCreateEvents(service, allEvents, calendarId);
+        }
+
+
+    }
+
     public static void main(String... args) throws IOException, GeneralSecurityException {
+        parseForm();
+    }
+
+    public static void promptUser() throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
@@ -185,10 +265,10 @@ public class ClassTimes {
         // deleteAllEvents(service);
 
         // Get list of school days.
-        TreeMap schoolDays = GAPlanner.getSchoolDaysMap();
+        TreeMap schoolDays = GAPlanner21_22.getSchoolDaysMap();
         ArrayList<String> schoolDates = new ArrayList<String>(schoolDays.keySet());
         System.out.println(
-          "Total number of school days in this semester: " + schoolDates.size());
+                "Total number of school days in this semester: " + schoolDates.size());
 
         Scanner sc = new Scanner(System.in);
         System.out.println("What is your name?");
@@ -240,7 +320,7 @@ public class ClassTimes {
             String dateString = schoolDates.get(i);
             LocalDate targetDate = LocalDate.parse(dateString);
             System.out.println("That date is a Day " + schoolDays.get(dateString));
-            if (GAPlanner.isThereClassToday(dateString, block, schoolDays)) {
+            if (GAPlanner21_22.isThereClassToday(dateString, block, schoolDays)) {
               Event event = setUpClassEvent(targetDate, block, className, upperclassmen, colorId);
               allEvents.add(event);
             } else {
