@@ -5,6 +5,7 @@
 // tinaozhu, winter 2021.
 
 // Google API imports.
+
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -56,15 +57,15 @@ public class ClassTimes {
      */
     private static void sleep(int s) {
         try {
-          TimeUnit.SECONDS.sleep(s);
-        }
-        catch (InterruptedException ex) {
-          System.out.println("ERROR: sleep call failed - why?");
+            TimeUnit.SECONDS.sleep(s);
+        } catch (InterruptedException ex) {
+            System.out.println("ERROR: sleep call failed - why?");
         }
     }
 
     /**
      * Creates an authorized Credential object.
+     *
      * @param HTTP_TRANSPORT The network HTTP Transport.
      * @return An authorized Credential object.
      * @throws IOException If the credentials.json file cannot be found.
@@ -88,89 +89,99 @@ public class ClassTimes {
     }
 
     private static Event setUpClassEvent(
-        LocalDate targetDate,
-        String block,
-        String className,
-        boolean upperclassmen,
-        String colorId) {
+            LocalDate targetDate,
+            String block,
+            String className,
+            boolean upperclassmen,
+            String colorId) {
 
-      String timezone = "America/New_York";
+        String timezone = "America/New_York";
 
-      // Time zone wrangling.
-      LocalDateTime unzonedDateTime = GAPlanner21_22.dateTimeForBlock(targetDate, block, upperclassmen);
-      System.out.println("Start time for the block:" + unzonedDateTime);
-      Instant startInstant = unzonedDateTime.atZone(ZoneId.of(timezone)).toInstant();
+        // Time zone wrangling.
+        LocalDateTime unzonedDateTime = GAPlanner21_22.dateTimeForBlock(targetDate, block, upperclassmen);
+        System.out.println("Start time for the block:" + unzonedDateTime);
+        Instant startInstant = unzonedDateTime.atZone(ZoneId.of(timezone)).toInstant();
 
-      // Make a calendar event at that time.
-      Event event = new Event()
-          .setSummary(className)
-          .setDescription("");
+        // Make a calendar event at that time.
+        Event event = new Event()
+                .setSummary(className)
+                .setDescription("");
 
-      DateTime startDateTime = new DateTime(startInstant.toString());
-      EventDateTime start = new EventDateTime()
-          .setDateTime(startDateTime)
-          .setTimeZone(timezone);
-      event.setStart(start);
+        DateTime startDateTime = new DateTime(startInstant.toString());
+        EventDateTime start = new EventDateTime()
+                .setDateTime(startDateTime)
+                .setTimeZone(timezone);
+        event.setStart(start);
 
-      // Have the event end based on classMinutes duration.
-      int classMinutes = GAPlanner21_22.getClassDuration(targetDate, block);
-      Instant endInstant = unzonedDateTime.plusMinutes(classMinutes).atZone(ZoneId.of(timezone)).toInstant();
-      DateTime endDateTime = new DateTime(endInstant.toString());
-      EventDateTime end = new EventDateTime()
-          .setDateTime(endDateTime)
-          .setTimeZone(timezone);
-      event.setEnd(end);
-      if (colorId != "") {
-        event.setColorId(colorId);
-      }
+        // Have the event end based on classMinutes duration.
+        int classMinutes = GAPlanner21_22.getClassDuration(targetDate, block);
+        Instant endInstant = unzonedDateTime.plusMinutes(classMinutes).atZone(ZoneId.of(timezone)).toInstant();
+        DateTime endDateTime = new DateTime(endInstant.toString());
+        EventDateTime end = new EventDateTime()
+                .setDateTime(endDateTime)
+                .setTimeZone(timezone);
+        event.setEnd(end);
+        if (colorId != "") {
+            event.setColorId(colorId);
+        }
 
-      System.out.println("Finished setting up event:");
-      return event;
+        System.out.println("Finished setting up event:");
+        return event;
     }
 
     private static void actuallyCreateEvents(
-      Calendar service, ArrayList<Event> allEvents,
-      String calendarId) throws IOException, GeneralSecurityException {
-      // Get this from Settings > Integrate calendar.
-      Scanner sc = new Scanner(System.in);
-      System.out.println("Are you sure you want to create these " + allEvents.size() + " events? Y for yes.");
-      int counter = 0;
-      if (sc.nextLine().equals("Y")) {
-        for (int i = 0; i < allEvents.size(); i++) {
-          if (counter % 10 == 1) {
-            System.out.println(
-              "Sleeping for 1 second to prevent exceeding rate limit.");
-              // Note: If we create events too quickly in succession,
-              // Google Calendar will interrupt our requests
-              // (anti-spam mechanism probably?).
-            sleep(1);
-          }
-          Event event = allEvents.get(i);
-          event = service.events().insert(calendarId, event).execute();
-          System.out.printf("Event created: %s\n", event.getHtmlLink());
-          counter++;
+            Calendar service, ArrayList<Event> allEvents,
+            String calendarId) throws IOException, GeneralSecurityException {
+        // Get this from Settings > Integrate calendar.
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Are you sure you want to create these " + allEvents.size() + " events? Y for yes.");
+        int counter = 0;
+        if (sc.nextLine().equals("Y")) {
+            for (int i = 0; i < allEvents.size(); i++) {
+                if (counter % 10 == 1) {
+                    System.out.println(
+                            "Sleeping for 1 second to prevent exceeding rate limit.");
+                    // Note: If we create events too quickly in succession,
+                    // Google Calendar will interrupt our requests
+                    // (anti-spam mechanism probably?).
+                    sleep(1);
+                }
+                Event event = allEvents.get(i);
+                event = service.events().insert(calendarId, event).execute();
+                System.out.printf("Event created: %s\n", event.getHtmlLink());
+                counter++;
+            }
+        } else {
+            System.out.println("Okay, never mind.");
         }
-      } else {
-        System.out.println("Okay, never mind.");
-      }
     }
 
     private static void deleteAllEvents(Calendar service) throws IOException, GeneralSecurityException {
-      Scanner sc = new Scanner(System.in);
-      System.out.println("What's your calendar ID?");
-      String calendarId = sc.nextLine();
-      System.out.println("Deleting all events.");
-      String pageToken = null;
-      do {
-        Events events = service.events().list(calendarId).setPageToken(pageToken).execute();
-        List<Event> items = events.getItems();
-        for (Event event : items) {
-          String eventId = event.getId();
-          service.events().delete(calendarId, eventId).execute();
-          System.out.println("Deleted event: " + event.getSummary());
-        }
-        pageToken = events.getNextPageToken();
-      } while (pageToken != null);
+        Scanner sc = new Scanner(System.in);
+        System.out.println("What's your calendar ID?");
+        String calendarId = sc.nextLine();
+        System.out.println("Deleting all events.");
+        String pageToken = null;
+        do {
+            Events events = service.events().list(calendarId).setPageToken(pageToken).execute();
+            List<Event> items = events.getItems();
+            int counter = 0;
+            for (Event event : items) {
+                if (counter % 10 == 1) {
+                    System.out.println(
+                            "Sleeping for 1 second to prevent exceeding rate limit.");
+                    // Note: If we delete events too quickly in succession,
+                    // Google Calendar will interrupt our requests
+                    // (anti-spam mechanism probably?).
+                    sleep(1);
+                }
+                String eventId = event.getId();
+                service.events().delete(calendarId, eventId).execute();
+                System.out.println("Deleted event: " + event.getSummary());
+                counter++;
+            }
+            pageToken = events.getNextPageToken();
+        } while (pageToken != null);
     }
 
     public static void parseForm() throws IOException, GeneralSecurityException {
@@ -277,59 +288,59 @@ public class ClassTimes {
 
         String calendarId;
         if (username.equals("tina")) {
-          calendarId = TINAS_CALENDAR_ID;
+            calendarId = TINAS_CALENDAR_ID;
         } else {
-          System.out.println("What's your calendar ID?");
-          calendarId = sc.nextLine();
+            System.out.println("What's your calendar ID?");
+            calendarId = sc.nextLine();
         }
 
         while (true) {
-          System.out.println("Block? e.g. `A` [or type 'Q' to quit]");
-          String block = sc.nextLine();
-          if (block.equals("Q")) {
-            System.out.println("Bye!");
-            break;
-          }
-          System.out.println("Class name? This will be the name of the event in Calendar.");
-          String className = sc.nextLine();
-          System.out.println("1 for underclassmen schedule, 2 for upperclassmen.");
-          boolean upperclassmen = sc.nextInt() == 2;
-          sc.nextLine();
-          String colorId = "";
-          if (!username.equals("tina")) {
-            // These are just hard-coded values for my classes.
-            System.out.println("Color ID (int). Press enter to skip and use default calendar color.");
-            colorId = sc.nextLine();
-            System.out.println("Chosen color ID:" + colorId);
-          } else {
-            if (block.equals("A")) {
-              colorId = "6";
-            } else if (block.equals("B")) {
-              colorId = "7";
-            } else if (block.equals("E")) {
-              colorId = "10";
-            } else if (block.equals("F")) {
-              colorId = "4";
+            System.out.println("Block? e.g. `A` [or type 'Q' to quit]");
+            String block = sc.nextLine();
+            if (block.equals("Q")) {
+                System.out.println("Bye!");
+                break;
             }
-          }
-
-          // Generate list of events to create.
-          ArrayList<Event> allEvents = new ArrayList<Event>();
-          for (int i = 0; i < schoolDays.size(); i++) {
-            // This is iffy. Shouldn't index into a set like this.
-            String dateString = schoolDates.get(i);
-            LocalDate targetDate = LocalDate.parse(dateString);
-            System.out.println("That date is a Day " + schoolDays.get(dateString));
-            if (GAPlanner21_22.isThereClassToday(dateString, block, schoolDays)) {
-              Event event = setUpClassEvent(targetDate, block, className, upperclassmen, colorId);
-              allEvents.add(event);
+            System.out.println("Class name? This will be the name of the event in Calendar.");
+            String className = sc.nextLine();
+            System.out.println("1 for underclassmen schedule, 2 for upperclassmen.");
+            boolean upperclassmen = sc.nextInt() == 2;
+            sc.nextLine();
+            String colorId = "";
+            if (!username.equals("tina")) {
+                // These are just hard-coded values for my classes.
+                System.out.println("Color ID (int). Press enter to skip and use default calendar color.");
+                colorId = sc.nextLine();
+                System.out.println("Chosen color ID:" + colorId);
             } else {
-              System.out.println("No " + block + " block class that day.");
+                if (block.equals("A")) {
+                    colorId = "6";
+                } else if (block.equals("B")) {
+                    colorId = "7";
+                } else if (block.equals("E")) {
+                    colorId = "10";
+                } else if (block.equals("F")) {
+                    colorId = "4";
+                }
             }
-          }
 
-          System.out.println("Generated " + allEvents.size() + " total events.");
-          actuallyCreateEvents(service, allEvents, calendarId);
-          }
-      }
+            // Generate list of events to create.
+            ArrayList<Event> allEvents = new ArrayList<Event>();
+            for (int i = 0; i < schoolDays.size(); i++) {
+                // This is iffy. Shouldn't index into a set like this.
+                String dateString = schoolDates.get(i);
+                LocalDate targetDate = LocalDate.parse(dateString);
+                System.out.println("That date is a Day " + schoolDays.get(dateString));
+                if (GAPlanner21_22.isThereClassToday(dateString, block, schoolDays)) {
+                    Event event = setUpClassEvent(targetDate, block, className, upperclassmen, colorId);
+                    allEvents.add(event);
+                } else {
+                    System.out.println("No " + block + " block class that day.");
+                }
+            }
+
+            System.out.println("Generated " + allEvents.size() + " total events.");
+            actuallyCreateEvents(service, allEvents, calendarId);
+        }
+    }
 }
