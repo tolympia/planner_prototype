@@ -3,137 +3,123 @@
 // TODO: Extract hard coded values.
 
 import java.time.*;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.TreeMap;
+import java.util.*;
 
-public class GAPlanner21_22 {
 
-  private static LocalDate firstDayOfSchool = LocalDate.of(2021, Month.SEPTEMBER, 13);
-  private static LocalDate lastDayOfSchool = LocalDate.of(2022, Month.JANUARY, 12);
+public class GAPlanner2021 {
+
+  private static LocalDate firstDayOfSchool = LocalDate.of(2021, Month.JANUARY, 20);
+  private static LocalDate lastDayOfSchool = LocalDate.of(2021, Month.MAY, 26);
   private static String[] blocks = {"A", "B", "C", "D", "E", "F", "G"};
   private static int[] dayTypes = {1, 2, 3, 4, 5, 6, 7};  // e.g., Day 1 in Planner.
 
   // Dates where we don't have school.
   private static ArrayList<LocalDate> holidays = new ArrayList<LocalDate>() {
     {
-      add(LocalDate.of(2021, Month.SEPTEMBER, 16));
-      add(LocalDate.of(2021, Month.OCTOBER, 11));
-      add(LocalDate.of(2021, Month.NOVEMBER, 24));
-      add(LocalDate.of(2021, Month.NOVEMBER, 25));
-      add(LocalDate.of(2021, Month.NOVEMBER, 26));
+      add(LocalDate.of(2020, Month.SEPTEMBER, 7));
+      add(LocalDate.of(2020, Month.SEPTEMBER, 28));
+      add(LocalDate.of(2020, Month.OCTOBER, 12));
+      add(LocalDate.of(2020, Month.NOVEMBER, 25));
+      add(LocalDate.of(2020, Month.NOVEMBER, 26));
+      add(LocalDate.of(2020, Month.NOVEMBER, 27));
+      // add(LocalDate.of(2020, Month.NOVEMBER, 30));
+      add(LocalDate.of(2021, Month.FEBRUARY, 11));
+      add(LocalDate.of(2021, Month.FEBRUARY, 12));
+      add(LocalDate.of(2021, Month.FEBRUARY, 15));
+      add(LocalDate.of(2021, Month.MARCH, 15));
+      add(LocalDate.of(2021, Month.MARCH, 16));
+      add(LocalDate.of(2021, Month.MARCH, 17));
+      add(LocalDate.of(2021, Month.MARCH, 18));
+      add(LocalDate.of(2021, Month.MARCH, 19));
+      add(LocalDate.of(2021, Month.MARCH, 22));
+      add(LocalDate.of(2021, Month.MARCH, 23));
+      add(LocalDate.of(2021, Month.MARCH, 24));
+      add(LocalDate.of(2021, Month.MARCH, 25));
+      add(LocalDate.of(2021, Month.MARCH, 26));
+      add(LocalDate.of(2021, Month.APRIL, 2));
+      add(LocalDate.of(2021, Month.APRIL, 23));
     }
   };
-
-  // The following are lists of block start times.
-  // TODO: Should be a class with start and end times encapsulated.
-  private static ArrayList<LocalTime> flexBaseTimes = new ArrayList<LocalTime>() {
-    {
-      add(LocalTime.of(8, 10));
-      add(LocalTime.of(9, 20));
-      add(LocalTime.of(11, 05));
-      add(LocalTime.of(12, 05));  // Lunch block.
-      add(LocalTime.of(13, 40));
-    }
-  };
-
-  private static ArrayList<LocalTime> friBaseTimes = new ArrayList<LocalTime>() {  // Fri schedule.
-    {
-      add(LocalTime.of(8, 10));
-      add(LocalTime.of(9, 20));
-      add(LocalTime.of(10, 30));
-      add(LocalTime.of(11, 40));  // Lunch block.
-      add(LocalTime.of(13, 15));
-    }
-  };
-
-  private static ArrayList<LocalTime> wedBaseTimes = new ArrayList<LocalTime>() {  // Wed schedule.
-    {
-      add(LocalTime.of(9, 10));
-      add(LocalTime.of(10, 10));
-      add(LocalTime.of(11, 10));
-      add(LocalTime.of(12, 10));  // Lunch block.
-      add(LocalTime.of(13, 30));
-    }
-  };
-
-  // TODO: Map dates to special schedules.
-  // Keys are LocalDates, values are ArrayLists representing the block times for the day.
-  private static TreeMap<LocalDate, ArrayList<LocalTime>> adjustedSchedules = new TreeMap();
-
-  static {
-    // Winter break is December 20 to January 2.
-    LocalDate firstDayOfBreak = LocalDate.of(2021, Month.DECEMBER, 20);
-    for (int i = 0; i < 7 * 2; i++) {
-      holidays.add(firstDayOfBreak.plusDays(i));
-    }
-  }
 
   public static boolean isThereClassToday(String dateString, String block, TreeMap schoolDays) {
     ArrayList<String> blocksToday = blocksForDayType((int) schoolDays.get(dateString));
     return blocksToday.contains(block);
   }
 
-  public static int getClassDuration(LocalDate date, String block) {
-    TreeMap schoolDays = getSchoolDaysMap();
-    ArrayList<String> blocksToday = blocksForDayType((int) schoolDays.get(date.toString()));
-    // What blockNum is the given block?
-    int blockNum = blocksToday.indexOf(block);
-
+  public static int getClassDuration(LocalDate date) {
     DayOfWeek day = date.getDayOfWeek();
-    boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
-
     if (day == DayOfWeek.WEDNESDAY) {
-      return 50;  // Shortened schedule because of delayed start.
+      return 40;  // Shortened schedule because of Covid.
     } else {
-      // Shorter periods on flex days block #2.
-      if (blockNum == 2 && flexDay) {
-        return 50;
-      }
-      else {
-        return 60;
-      }
+      return 50;
     }
   }
 
   public static LocalDateTime dateTimeForBlock(LocalDate date, String block, boolean upperclassmen) {
+    // Returns ArrayList of length 2 with start and end time for block.
     TreeMap schoolDays = getSchoolDaysMap();
     ArrayList<String> blocksToday = blocksForDayType((int) schoolDays.get(date.toString()));
-
     // What blockNum is the given block?
     int blockNum = blocksToday.indexOf(block);
     // If -1, there is no block that day.
     if (blockNum == -1) {
       return null;
     }
+    LocalTime startTime = timeForBlockStart(date, blockNum, upperclassmen);
+    return LocalDateTime.of(date, startTime);
+  }
 
+  private static LocalTime timeForBlockStart(LocalDate date, int blockNum, boolean upperclassmen) {
+    int upperclassmenDelay = 10;  // Minutes.
     DayOfWeek day = date.getDayOfWeek();
-    ArrayList<LocalTime> blockTimes;
 
+    ArrayList<LocalTime> blockTimes;
     boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
     if (flexDay) {
-      blockTimes = flexBaseTimes;
-    } else if (day == DayOfWeek.FRIDAY) {
-      blockTimes = friBaseTimes;
-    } else {  // Wed schedule
-      blockTimes = wedBaseTimes;
+      blockTimes = new ArrayList<LocalTime>() {
+        {
+          add(LocalTime.of(8, 15));
+          add(LocalTime.of(9, 20));
+          add(LocalTime.of(11, 00));
+          add(LocalTime.of(12, 05));  // Lunch block.
+          add(LocalTime.of(13, 45));
+        }
+      };
     }
+    else {
+      blockTimes = new ArrayList<LocalTime>() {  // Wed/Fri schedule.
+        {
+          add(LocalTime.of(8, 15));
+          add(LocalTime.of(9, 20));
+          add(LocalTime.of(10, 25));
+          add(LocalTime.of(11, 30));  // Lunch block.
+          add(LocalTime.of(13, 10));
+        }
+      };
+    };
 
-    LocalTime startTime = blockTimes.get(blockNum);
-
+    LocalTime classTime = blockTimes.get(blockNum);
     // Adjust for upperclassmen schedule.
-    // TODO: Maybe add to static variable set.
     if (upperclassmen) {
       if (blockNum == 3) {  // Lunch block.
-        if (day == DayOfWeek.FRIDAY) {
-          startTime = LocalTime.of(12, 5);  // Hacky.
-        } else {
-          startTime = LocalTime.of(12, 30);  // Hacky.
+        if (flexDay) {
+          classTime = LocalTime.of(12, 50);  // Hacky.
+        } else {  // Not a flex day.
+          classTime = LocalTime.of(12, 15);  // Hacky.
         }
+      } else {
+        classTime = classTime.plusMinutes(upperclassmenDelay);
       }
     }
-    return LocalDateTime.of(date, startTime);
 
+    LocalTime advisory;
+    if (day == DayOfWeek.WEDNESDAY) {  // Late start days.
+      advisory = LocalTime.of(8, 40);
+      classTime = classTime.plusMinutes(50 - (blockNum * 10));
+    } else {
+      advisory = LocalTime.of(7, 50);
+    }
+    return classTime;
   }
 
   public static ArrayList<String> blocksForDayType(int dayType) {
