@@ -24,41 +24,9 @@ public class GAPlanner2122 {
     }
   };
 
-  // The following are lists of block start times.
-  // TODO: Should be a class with start and end times encapsulated.
-  private static ArrayList<LocalTime> flexBaseTimes = new ArrayList<LocalTime>() {
-    {
-      add(LocalTime.of(8, 10));
-      add(LocalTime.of(9, 20));
-      add(LocalTime.of(11, 05));
-      add(LocalTime.of(12, 05));  // Lunch block.
-      add(LocalTime.of(13, 40));
-    }
-  };
-
-  private static ArrayList<LocalTime> friBaseTimes = new ArrayList<LocalTime>() {  // Fri schedule.
-    {
-      add(LocalTime.of(8, 10));
-      add(LocalTime.of(9, 20));
-      add(LocalTime.of(10, 30));
-      add(LocalTime.of(11, 40));  // Lunch block.
-      add(LocalTime.of(13, 15));
-    }
-  };
-
-  private static ArrayList<LocalTime> wedBaseTimes = new ArrayList<LocalTime>() {  // Wed schedule.
-    {
-      add(LocalTime.of(9, 10));
-      add(LocalTime.of(10, 10));
-      add(LocalTime.of(11, 10));
-      add(LocalTime.of(12, 10));  // Lunch block.
-      add(LocalTime.of(13, 30));
-    }
-  };
-
   // TODO: Map dates to special schedules.
-  // Keys are LocalDates, values are ArrayLists representing the block times for the day.
-  private static TreeMap<LocalDate, ArrayList<LocalTime>> adjustedSchedules = new TreeMap();
+  // Keys are LocalDates, values are Day.
+  private static TreeMap<LocalDate, Schedule> adjustedSchedules = new TreeMap();
 
   static {
     // Winter break is December 20 to January 2.
@@ -73,66 +41,36 @@ public class GAPlanner2122 {
     return blocksToday.contains(block);
   }
 
-  public static int getClassDuration(LocalDate date, String block) {
+  public static ArrayList<LocalDateTime> dateTimeForBlock(LocalDate date, String blockChar, boolean upperclassmen) {
     TreeMap schoolDays = getSchoolDaysMap();
-    ArrayList<String> blocksToday = blocksForDayType((int) schoolDays.get(date.toString()));
-    // What blockNum is the given block?
-    int blockNum = blocksToday.indexOf(block);
-
-    DayOfWeek day = date.getDayOfWeek();
-    boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
-
-    if (day == DayOfWeek.WEDNESDAY) {
-      return 50;  // Shortened schedule because of delayed start.
-    } else {
-      // Shorter periods on flex days block #2.
-      if (blockNum == 2 && flexDay) {
-        return 50;
-      }
-      else {
-        return 60;
-      }
-    }
-  }
-
-  public static LocalDateTime dateTimeForBlock(LocalDate date, String block, boolean upperclassmen) {
-    TreeMap schoolDays = getSchoolDaysMap();
-    ArrayList<String> blocksToday = blocksForDayType((int) schoolDays.get(date.toString()));
+    ArrayList<String> blockCharsToday = blocksForDayType((int) schoolDays.get(date.toString()));
 
     // What blockNum is the given block?
-    int blockNum = blocksToday.indexOf(block);
+    int blockNum = blockCharsToday.indexOf(blockChar);
     // If -1, there is no block that day.
     if (blockNum == -1) {
       return null;
     }
 
     DayOfWeek day = date.getDayOfWeek();
-    ArrayList<LocalTime> blockTimes;
+
+    Schedule schedule;
 
     boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
     if (flexDay) {
-      blockTimes = flexBaseTimes;
+      schedule = new USFlexDay();
     } else if (day == DayOfWeek.FRIDAY) {
-      blockTimes = friBaseTimes;
+      // TODO: Update to USFriday
+      schedule = new USFlexDay();
     } else {  // Wed schedule
-      blockTimes = wedBaseTimes;
+      schedule = new USWednesday();
     }
 
-    LocalTime startTime = blockTimes.get(blockNum);
-
-    // Adjust for upperclassmen schedule.
-    // TODO: Maybe add to static variable set.
     if (upperclassmen) {
-      if (blockNum == 3) {  // Lunch block.
-        if (day == DayOfWeek.FRIDAY) {
-          startTime = LocalTime.of(12, 5);  // Hacky.
-        } else {
-          startTime = LocalTime.of(12, 30);  // Hacky.
-        }
-      }
+      schedule.adjustForUpperclassmen();
     }
-    return LocalDateTime.of(date, startTime);
 
+    return schedule.getLocalDateTimes(date, blockNum);
   }
 
   public static ArrayList<String> blocksForDayType(int dayType) {
@@ -200,7 +138,8 @@ public class GAPlanner2122 {
     System.out.println("That date is a Day " + schoolDays.get(desiredDate));
     ArrayList<String> blocksToday = blocksForDayType((int) schoolDays.get(desiredDate));
     System.out.println("Blocks that day :" + blocksToday);
-    System.out.println("Start time for the block:" + dateTimeForBlock(desiredDateObj, desiredBlock, year == 2));
+    ArrayList<LocalDateTime> blockInfo = dateTimeForBlock(desiredDateObj, desiredBlock, year == 2);
+    System.out.println("Start time for the block:" + blockInfo.get(0));
   }
 
   public static void main(String[] args) {

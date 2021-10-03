@@ -43,7 +43,6 @@ public class ClassTimes {
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
 
-
     /**
      * Global instance of the scopes required by this quickstart.
      * If modifying these scopes, delete your previously saved tokens/ folder.
@@ -72,7 +71,7 @@ public class ClassTimes {
      */
     private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
         // Load client secrets.
-        InputStream in = CalendarQuickstart.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
+        InputStream in = ClassTimes.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
         if (in == null) {
             throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
         }
@@ -98,9 +97,12 @@ public class ClassTimes {
         String timezone = "America/New_York";
 
         // Time zone wrangling.
-        LocalDateTime unzonedDateTime = GAPlanner2122.dateTimeForBlock(targetDate, block, upperclassmen);
-        System.out.println("Start time for the block:" + unzonedDateTime);
-        Instant startInstant = unzonedDateTime.atZone(ZoneId.of(timezone)).toInstant();
+        ArrayList<LocalDateTime> startEndDateTimes = GAPlanner2122.dateTimeForBlock(targetDate, block, upperclassmen);
+        LocalDateTime unzonedStartTime = startEndDateTimes.get(0);
+        LocalDateTime unzonedEndTime = startEndDateTimes.get(1);
+        System.out.println("Start time for the block:" + unzonedStartTime);
+        System.out.println("End time:" + unzonedEndTime);
+        Instant startInstant = unzonedStartTime.atZone(ZoneId.of(timezone)).toInstant();
 
         // Make a calendar event at that time.
         Event event = new Event()
@@ -114,8 +116,8 @@ public class ClassTimes {
         event.setStart(start);
 
         // Have the event end based on classMinutes duration.
-        int classMinutes = GAPlanner2122.getClassDuration(targetDate, block);
-        Instant endInstant = unzonedDateTime.plusMinutes(classMinutes).atZone(ZoneId.of(timezone)).toInstant();
+        Instant endInstant = unzonedEndTime.atZone(
+          ZoneId.of(timezone)).toInstant();
         DateTime endDateTime = new DateTime(endInstant.toString());
         EventDateTime end = new EventDateTime()
                 .setDateTime(endDateTime)
@@ -184,7 +186,7 @@ public class ClassTimes {
         } while (pageToken != null);
     }
 
-    public static void parseForm() throws IOException, GeneralSecurityException {
+    public static void createEventsFromForm() throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
@@ -262,18 +264,15 @@ public class ClassTimes {
     }
 
     public static void main(String... args) throws IOException, GeneralSecurityException {
-        parseForm();
+        createEventsByCommand();
     }
 
-    public static void promptUser() throws IOException, GeneralSecurityException {
+    public static void createEventsByCommand() throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
-
-        // Be careful with this!
-        // deleteAllEvents(service);
 
         // Get list of school days.
         TreeMap schoolDays = GAPlanner2122.getSchoolDaysMap();
