@@ -98,7 +98,7 @@ public class ClassTimes {
         String timezone = "America/New_York";
 
         // Time zone wrangling.
-        LocalDateTime unzonedDateTime = GAPlanner21_22.dateTimeForBlock(targetDate, block, upperclassmen);
+        LocalDateTime unzonedDateTime = GAPlanner2122.dateTimeForBlock(targetDate, block, upperclassmen);
         System.out.println("Start time for the block:" + unzonedDateTime);
         Instant startInstant = unzonedDateTime.atZone(ZoneId.of(timezone)).toInstant();
 
@@ -114,7 +114,7 @@ public class ClassTimes {
         event.setStart(start);
 
         // Have the event end based on classMinutes duration.
-        int classMinutes = GAPlanner21_22.getClassDuration(targetDate, block);
+        int classMinutes = GAPlanner2122.getClassDuration(targetDate, block);
         Instant endInstant = unzonedDateTime.plusMinutes(classMinutes).atZone(ZoneId.of(timezone)).toInstant();
         DateTime endDateTime = new DateTime(endInstant.toString());
         EventDateTime end = new EventDateTime()
@@ -207,7 +207,7 @@ public class ClassTimes {
         // deleteAllEvents(service);
 
         // Get list of school days.
-        TreeMap schoolDays = GAPlanner21_22.getSchoolDaysMap();
+        TreeMap schoolDays = GAPlanner2122.getSchoolDaysMap();
         ArrayList<String> schoolDates = new ArrayList<String>(schoolDays.keySet());
         System.out.println(
                 "Total number of school days in this semester: " + schoolDates.size());
@@ -246,7 +246,7 @@ public class ClassTimes {
                 String dateString = schoolDates.get(j);
                 LocalDate targetDate = LocalDate.parse(dateString);
                 System.out.println("That date is a Day " + schoolDays.get(dateString));
-                if (GAPlanner21_22.isThereClassToday(dateString, block, schoolDays)) {
+                if (GAPlanner2122.isThereClassToday(dateString, block, schoolDays)) {
                     Event event = setUpClassEvent(targetDate, block, className, upperclassmen, colorId);
                     allEvents.add(event);
                 } else {
@@ -276,7 +276,7 @@ public class ClassTimes {
         // deleteAllEvents(service);
 
         // Get list of school days.
-        TreeMap schoolDays = GAPlanner21_22.getSchoolDaysMap();
+        TreeMap schoolDays = GAPlanner2122.getSchoolDaysMap();
         ArrayList<String> schoolDates = new ArrayList<String>(schoolDays.keySet());
         System.out.println(
                 "Total number of school days in this semester: " + schoolDates.size());
@@ -331,7 +331,7 @@ public class ClassTimes {
                 String dateString = schoolDates.get(i);
                 LocalDate targetDate = LocalDate.parse(dateString);
                 System.out.println("That date is a Day " + schoolDays.get(dateString));
-                if (GAPlanner21_22.isThereClassToday(dateString, block, schoolDays)) {
+                if (GAPlanner2122.isThereClassToday(dateString, block, schoolDays)) {
                     Event event = setUpClassEvent(targetDate, block, className, upperclassmen, colorId);
                     allEvents.add(event);
                 } else {
