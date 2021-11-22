@@ -5,7 +5,6 @@
 import java.time.*;
 import java.util.*;
 
-
 public class GAPlanner2122 {
 
   private static LocalDate firstDayOfSchool = LocalDate.of(2021, Month.SEPTEMBER, 13);
@@ -57,8 +56,13 @@ public class GAPlanner2122 {
   };
 
   // TODO: Map dates to special schedules.
+<<<<<<< Updated upstream
   // Keys are LocalDates, values are ArrayLists representing the block times for the day.
   private static TreeMap<LocalDate, ArrayList<LocalTime>> adjustedSchedules = new TreeMap();
+=======
+  // Keys are LocalDates, values are Schedules.
+  private static TreeMap<LocalDate, Schedule> adjustedSchedules = new TreeMap();
+>>>>>>> Stashed changes
 
   static {
     // Winter break is December 20 to January 2.
@@ -111,6 +115,7 @@ public class GAPlanner2122 {
 
     boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
     if (flexDay) {
+<<<<<<< Updated upstream
       blockTimes = flexBaseTimes;
     } else if (day == DayOfWeek.FRIDAY) {
       blockTimes = friBaseTimes;
@@ -130,6 +135,14 @@ public class GAPlanner2122 {
           startTime = LocalTime.of(12, 30);  // Hacky.
         }
       }
+=======
+      schedule = new USFlexDay(upperclassmen);
+    } else if (day == DayOfWeek.FRIDAY) {
+      // TODO: Update to USFriday
+      schedule = new USFlexDay(upperclassmen);
+    } else {  // Wed schedule
+      schedule = new USWednesday(upperclassmen);
+>>>>>>> Stashed changes
     }
     return LocalDateTime.of(date, startTime);
 
