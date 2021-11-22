@@ -5,7 +5,6 @@
 import java.time.*;
 import java.util.*;
 
-
 public class GAPlanner2122 {
 
   private static LocalDate firstDayOfSchool = LocalDate.of(2021, Month.SEPTEMBER, 13);
@@ -25,8 +24,18 @@ public class GAPlanner2122 {
   };
 
   // TODO: Map dates to special schedules.
+<<<<<<< HEAD
   // Keys are LocalDates, values are Day.
   private static TreeMap<LocalDate, Schedule> adjustedSchedules = new TreeMap();
+=======
+<<<<<<< Updated upstream
+  // Keys are LocalDates, values are ArrayLists representing the block times for the day.
+  private static TreeMap<LocalDate, ArrayList<LocalTime>> adjustedSchedules = new TreeMap();
+=======
+  // Keys are LocalDates, values are Schedules.
+  private static TreeMap<LocalDate, Schedule> adjustedSchedules = new TreeMap();
+>>>>>>> Stashed changes
+>>>>>>> ms
 
   static {
     // Winter break is December 20 to January 2.
@@ -58,7 +67,12 @@ public class GAPlanner2122 {
 
     boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
     if (flexDay) {
+<<<<<<< HEAD
       schedule = new USFlexDay();
+=======
+<<<<<<< Updated upstream
+      blockTimes = flexBaseTimes;
+>>>>>>> ms
     } else if (day == DayOfWeek.FRIDAY) {
       // TODO: Update to USFriday
       schedule = new USFlexDay();
@@ -67,7 +81,25 @@ public class GAPlanner2122 {
     }
 
     if (upperclassmen) {
+<<<<<<< HEAD
       schedule.adjustForUpperclassmen();
+=======
+      if (blockNum == 3) {  // Lunch block.
+        if (day == DayOfWeek.FRIDAY) {
+          startTime = LocalTime.of(12, 5);  // Hacky.
+        } else {
+          startTime = LocalTime.of(12, 30);  // Hacky.
+        }
+      }
+=======
+      schedule = new USFlexDay(upperclassmen);
+    } else if (day == DayOfWeek.FRIDAY) {
+      // TODO: Update to USFriday
+      schedule = new USFlexDay(upperclassmen);
+    } else {  // Wed schedule
+      schedule = new USWednesday(upperclassmen);
+>>>>>>> Stashed changes
+>>>>>>> ms
     }
 
     return schedule.getLocalDateTimes(date, blockNum);
