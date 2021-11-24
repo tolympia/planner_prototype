@@ -7,52 +7,39 @@ import java.util.*;
 
 public class GAPlanner2122 {
 
-  private static LocalDate firstDayOfSchool = LocalDate.of(2021, Month.SEPTEMBER, 13);
-  private static LocalDate lastDayOfSchool = LocalDate.of(2022, Month.JANUARY, 12);
-  private static String[] blocks = {"A", "B", "C", "D", "E", "F", "G"};
-  private static int[] dayTypes = {1, 2, 3, 4, 5, 6, 7};  // e.g., Day 1 in Planner.
-
-  // Dates where we don't have school.
-  private static ArrayList<LocalDate> holidays = new ArrayList<LocalDate>() {
-    {
-      add(LocalDate.of(2021, Month.SEPTEMBER, 16));
-      add(LocalDate.of(2021, Month.OCTOBER, 11));
-      add(LocalDate.of(2021, Month.NOVEMBER, 24));
-      add(LocalDate.of(2021, Month.NOVEMBER, 25));
-      add(LocalDate.of(2021, Month.NOVEMBER, 26));
-    }
-  };
-
   // TODO: Map dates to special schedules.
-<<<<<<< HEAD
   // Keys are LocalDates, values are Day.
-  private static TreeMap<LocalDate, Schedule> adjustedSchedules = new TreeMap();
-=======
-<<<<<<< Updated upstream
-  // Keys are LocalDates, values are ArrayLists representing the block times for the day.
-  private static TreeMap<LocalDate, ArrayList<LocalTime>> adjustedSchedules = new TreeMap();
-=======
-  // Keys are LocalDates, values are Schedules.
-  private static TreeMap<LocalDate, Schedule> adjustedSchedules = new TreeMap();
->>>>>>> Stashed changes
->>>>>>> ms
+  private static Map<LocalDate, Schedule> adjustedSchedules = new TreeMap();
 
-  static {
-    // Winter break is December 20 to January 2.
-    LocalDate firstDayOfBreak = LocalDate.of(2021, Month.DECEMBER, 20);
-    for (int i = 0; i < 7 * 2; i++) {
-      holidays.add(firstDayOfBreak.plusDays(i));
-    }
-  }
-
-  public static boolean isThereClassToday(String dateString, String block, TreeMap schoolDays) {
-    ArrayList<String> blocksToday = blocksForDayType((int) schoolDays.get(dateString));
+  public static boolean isThereClassToday(LocalDate date, String block, Map schoolDays) {
+    // TODO: Look up specific schedule for this day (Use adjustedSchedules)
+    Schedule today = getScheduleForDate(date, false);
+    ArrayList<String> blocksToday = today.blocksForDayType();
     return blocksToday.contains(block);
   }
 
-  public static ArrayList<LocalDateTime> dateTimeForBlock(LocalDate date, String blockChar, boolean upperclassmen) {
-    TreeMap schoolDays = getSchoolDaysMap();
-    ArrayList<String> blockCharsToday = blocksForDayType((int) schoolDays.get(date.toString()));
+  public static Schedule getScheduleForDate(LocalDate date, boolean upperclassmen) {
+    DayOfWeek day = date.getDayOfWeek();
+
+    Schedule schedule;
+    boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
+    if (flexDay) {
+      schedule = new USFlexDay(date, upperclassmen);
+    } else if (day == DayOfWeek.FRIDAY) {
+      schedule = new USFriday(date, upperclassmen);
+    } else {  // Wed schedule
+      schedule = new USWednesday(date, upperclassmen);
+    }
+    return schedule;
+
+  }
+
+  public static LocalDateTime getTimeForBlock(LocalDate date, String blockChar, boolean upperclassmen, boolean start) {
+
+    Schedule schedule = getScheduleForDate(date, upperclassmen);
+
+    // TODO: Move this logic to Schedule.
+    ArrayList<String> blockCharsToday = schedule.blocksForDayType();
 
     // What blockNum is the given block?
     int blockNum = blockCharsToday.indexOf(blockChar);
@@ -61,102 +48,15 @@ public class GAPlanner2122 {
       return null;
     }
 
-    DayOfWeek day = date.getDayOfWeek();
-
-    Schedule schedule;
-
-    boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
-    if (flexDay) {
-<<<<<<< HEAD
-      schedule = new USFlexDay();
-=======
-<<<<<<< Updated upstream
-      blockTimes = flexBaseTimes;
->>>>>>> ms
-    } else if (day == DayOfWeek.FRIDAY) {
-      // TODO: Update to USFriday
-      schedule = new USFlexDay();
-    } else {  // Wed schedule
-      schedule = new USWednesday();
+    if (start) {
+      return schedule.getStart(date, blockNum);
+    } else {
+      return schedule.getEnd(date, blockNum);
     }
-
-    if (upperclassmen) {
-<<<<<<< HEAD
-      schedule.adjustForUpperclassmen();
-=======
-      if (blockNum == 3) {  // Lunch block.
-        if (day == DayOfWeek.FRIDAY) {
-          startTime = LocalTime.of(12, 5);  // Hacky.
-        } else {
-          startTime = LocalTime.of(12, 30);  // Hacky.
-        }
-      }
-=======
-      schedule = new USFlexDay(upperclassmen);
-    } else if (day == DayOfWeek.FRIDAY) {
-      // TODO: Update to USFriday
-      schedule = new USFlexDay(upperclassmen);
-    } else {  // Wed schedule
-      schedule = new USWednesday(upperclassmen);
->>>>>>> Stashed changes
->>>>>>> ms
-    }
-
-    return schedule.getLocalDateTimes(date, blockNum);
-  }
-
-  public static ArrayList<String> blocksForDayType(int dayType) {
-    int numBlocksPerDay = 5;
-    ArrayList<String> blocksToday = new ArrayList<String>(numBlocksPerDay);
-
-    int currentBlock = 0;
-    for (int i = 1; i < dayTypes.length + 1; i++) {
-      blocksToday.clear();
-      for (int blockNum = 0; blockNum < numBlocksPerDay; blockNum++) {
-        blocksToday.add(blocks[currentBlock % blocks.length]);
-        currentBlock = currentBlock + 1 % blocks.length;
-      }
-      if (i == dayType) {
-        return blocksToday;
-      }
-    }
-    return blocksToday;
-  }
-
-  private static boolean isThereSchool(LocalDate date) {
-    DayOfWeek day = date.getDayOfWeek();
-    if (day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY) {
-      return false;
-    }
-    if (holidays.contains(date)) {
-      return false;
-    }
-    return true;
-  }
-
-  public static TreeMap getSchoolDaysMap() {
-    // Returns String dates, int dayType map.
-    TreeMap schoolDays = new TreeMap();
-    int dayTypeIdx = 0;
-    int dayCounter = 0;
-    // TODO: This could be a lot cleaner.
-    while (true) {
-      LocalDate thisDate = firstDayOfSchool.plusDays(dayCounter);
-      if (thisDate.isAfter(lastDayOfSchool)) {
-        break;
-      }
-      if (isThereSchool(thisDate)) {
-        schoolDays.put(thisDate.toString(), dayTypes[dayTypeIdx]);
-        dayTypeIdx++;
-        dayTypeIdx = dayTypeIdx % dayTypes.length;
-      }
-      dayCounter++;
-    }
-    return schoolDays;
   }
 
   public static void demo() {
-    TreeMap schoolDays = getSchoolDaysMap();
+    Map schoolDays = Schedule.getSchoolDaysMap();
     ArrayList<String> schoolDates = new ArrayList<String>(schoolDays.keySet());
 
     Scanner sc = new Scanner(System.in);
@@ -168,10 +68,11 @@ public class GAPlanner2122 {
     int year = sc.nextInt();
     LocalDate desiredDateObj = LocalDate.parse(desiredDate);
     System.out.println("That date is a Day " + schoolDays.get(desiredDate));
-    ArrayList<String> blocksToday = blocksForDayType((int) schoolDays.get(desiredDate));
+    Schedule sched = getScheduleForDate(desiredDateObj, year == 2);
+    ArrayList<String> blocksToday = sched.blocksForDayType();
     System.out.println("Blocks that day :" + blocksToday);
-    ArrayList<LocalDateTime> blockInfo = dateTimeForBlock(desiredDateObj, desiredBlock, year == 2);
-    System.out.println("Start time for the block:" + blockInfo.get(0));
+    LocalDateTime blockStart = getTimeForBlock(desiredDateObj, desiredBlock, year == 2, true);
+    System.out.println("Start time for the block:" + blockStart);
   }
 
   public static void main(String[] args) {

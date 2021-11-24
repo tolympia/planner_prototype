@@ -51,6 +51,8 @@ public class ClassTimes {
     private static final List<String> SCOPES = Collections.singletonList(CalendarScopes.CALENDAR);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
 
+    private static final String TIMEZONE = "America/New_York";
+
     /**
      * Helper function for sleep functionality.
      */
@@ -94,15 +96,13 @@ public class ClassTimes {
             boolean upperclassmen,
             String colorId) {
 
-        String timezone = "America/New_York";
-
         // Time zone wrangling.
-        ArrayList<LocalDateTime> startEndDateTimes = GAPlanner2122.dateTimeForBlock(targetDate, block, upperclassmen);
-        LocalDateTime unzonedStartTime = startEndDateTimes.get(0);
-        LocalDateTime unzonedEndTime = startEndDateTimes.get(1);
+        Schedule sch = GAPlanner2122.getScheduleForDate(targetDate, upperclassmen);
+        LocalDateTime unzonedStartTime = sch.getStart(targetDate, block);
+        LocalDateTime unzonedEndTime = sch.getEnd(targetDate, block);
         System.out.println("Start time for the block:" + unzonedStartTime);
         System.out.println("End time:" + unzonedEndTime);
-        Instant startInstant = unzonedStartTime.atZone(ZoneId.of(timezone)).toInstant();
+        Instant startInstant = unzonedStartTime.atZone(ZoneId.of(TIMEZONE)).toInstant();
 
         // Make a calendar event at that time.
         Event event = new Event()
@@ -112,16 +112,16 @@ public class ClassTimes {
         DateTime startDateTime = new DateTime(startInstant.toString());
         EventDateTime start = new EventDateTime()
                 .setDateTime(startDateTime)
-                .setTimeZone(timezone);
+                .setTimeZone(TIMEZONE);
         event.setStart(start);
 
-        // Have the event end based on classMinutes duration.
+        // TODO: Have the event end based on classMinutes duration.
         Instant endInstant = unzonedEndTime.atZone(
-          ZoneId.of(timezone)).toInstant();
+          ZoneId.of(TIMEZONE)).toInstant();
         DateTime endDateTime = new DateTime(endInstant.toString());
         EventDateTime end = new EventDateTime()
                 .setDateTime(endDateTime)
-                .setTimeZone(timezone);
+                .setTimeZone(TIMEZONE);
         event.setEnd(end);
         if (colorId != "") {
             event.setColorId(colorId);
@@ -209,7 +209,7 @@ public class ClassTimes {
         // deleteAllEvents(service);
 
         // Get list of school days.
-        TreeMap schoolDays = GAPlanner2122.getSchoolDaysMap();
+        Map schoolDays = Schedule.schoolDays;
         ArrayList<String> schoolDates = new ArrayList<String>(schoolDays.keySet());
         System.out.println(
                 "Total number of school days in this semester: " + schoolDates.size());
@@ -242,21 +242,8 @@ public class ClassTimes {
             String colorId = colors.get(i);
 
             // Generate list of events (classes) to create for this course.
-            ArrayList<Event> allEvents = new ArrayList<Event>();
-            for (int j = 0; j < schoolDays.size(); j++) {
-                // This is iffy. Shouldn't index into a set like this.
-                String dateString = schoolDates.get(j);
-                LocalDate targetDate = LocalDate.parse(dateString);
-                System.out.println("That date is a Day " + schoolDays.get(dateString));
-                if (GAPlanner2122.isThereClassToday(dateString, block, schoolDays)) {
-                    Event event = setUpClassEvent(targetDate, block, className, upperclassmen, colorId);
-                    allEvents.add(event);
-                } else {
-                    System.out.println("No " + block + " block class that day.");
-                }
-            }
+            ArrayList<Event> allEvents = generateListOfEventsToCreate(schoolDates, schoolDays, block, className, upperclassmen, colorId);
 
-            System.out.println("Generated " + allEvents.size() + " total events.");
             actuallyCreateEvents(service, allEvents, calendarId);
         }
 
@@ -275,7 +262,7 @@ public class ClassTimes {
                 .build();
 
         // Get list of school days.
-        TreeMap schoolDays = GAPlanner2122.getSchoolDaysMap();
+        Map schoolDays = Schedule.schoolDays;
         ArrayList<String> schoolDates = new ArrayList<String>(schoolDays.keySet());
         System.out.println(
                 "Total number of school days in this semester: " + schoolDates.size());
@@ -324,22 +311,29 @@ public class ClassTimes {
             }
 
             // Generate list of events to create.
-            ArrayList<Event> allEvents = new ArrayList<Event>();
-            for (int i = 0; i < schoolDays.size(); i++) {
-                // This is iffy. Shouldn't index into a set like this.
-                String dateString = schoolDates.get(i);
-                LocalDate targetDate = LocalDate.parse(dateString);
-                System.out.println("That date is a Day " + schoolDays.get(dateString));
-                if (GAPlanner2122.isThereClassToday(dateString, block, schoolDays)) {
-                    Event event = setUpClassEvent(targetDate, block, className, upperclassmen, colorId);
-                    allEvents.add(event);
-                } else {
-                    System.out.println("No " + block + " block class that day.");
-                }
-            }
+            ArrayList<Event> allEvents = generateListOfEventsToCreate(schoolDates, schoolDays, block, className, upperclassmen, colorId);
 
-            System.out.println("Generated " + allEvents.size() + " total events.");
             actuallyCreateEvents(service, allEvents, calendarId);
         }
+    }
+
+    private static ArrayList<Event> generateListOfEventsToCreate(ArrayList<String> schoolDates, Map schoolDays, String block, String className, boolean upperclassmen, String colorId) {
+      ArrayList<Event> allEvents = new ArrayList<Event>();
+      for (int i = 0; i < schoolDates.size(); i++) {
+          // This is iffy. Shouldn't index into a set like this.
+          String dateString = schoolDates.get(i);
+          LocalDate targetDate = LocalDate.parse(dateString);
+          System.out.println("That date is a Day " + schoolDays.get(dateString));
+          if (GAPlanner2122.isThereClassToday(targetDate, block, schoolDays)) {
+              Event event = setUpClassEvent(targetDate, block, className, upperclassmen, colorId);
+              allEvents.add(event);
+          } else {
+              System.out.println("No " + block + " block class that day.");
+          }
+      }
+
+      System.out.println("Generated " + allEvents.size() + " total events.");
+      return allEvents;
+
     }
 }
