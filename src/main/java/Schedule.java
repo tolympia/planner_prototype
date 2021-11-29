@@ -1,20 +1,30 @@
 import java.util.*;
 import java.time.*;
 
+
 public abstract class Schedule {
-  private final static String[] ALL_BLOCKS = {"A", "B", "C", "D", "E", "F", "G"};
-  private final static int NUM_BLOCKS_PER_DAY = 5;
-  private final static int[] DAY_TYPES = {1, 2, 3, 4, 5, 6, 7};  // e.g., Day 1 in Planner.
-  public static Map<String, Integer> schoolDays;
+  protected String[] ALL_BLOCKS = {"A", "B", "C", "D", "E", "F", "G"};
+  protected int NUM_BLOCKS_PER_DAY = 5;
+  protected int[] DAY_TYPES = {1, 2, 3, 4, 5, 6, 7};  // e.g., Day 1 in Planner.
 
   public ArrayList<Block> blocks;
+  public ArrayList<String> blockNames;
   public int dayType = -1;
+  protected LocalDate date;
 
-  public static LocalDate firstDayOfSchool = LocalDate.of(2021, Month.SEPTEMBER, 13);
-  public static LocalDate lastDayOfSchool = LocalDate.of(2022, Month.JANUARY, 12);
+  public LocalDate firstDayOfSchool = GAPlanner2122.usFirstDay;
+  public LocalDate lastDayOfSchool = GAPlanner2122.usLastDay;
+
+  public void setup(String[] blocks, int numBlocks, int[] dayTypes) {
+    this.ALL_BLOCKS = blocks;
+    this.NUM_BLOCKS_PER_DAY = numBlocks;
+    this.DAY_TYPES = dayTypes;
+    this.dayType = getDayType();
+    this.blockNames = blocksForDayType();
+  }
 
   public Schedule(LocalDate date) {
-    this.dayType = schoolDays.get(date.toString());
+    this.date = date;
   }
 
   // Dates where we don't have school.
@@ -25,18 +35,31 @@ public abstract class Schedule {
       add(LocalDate.of(2021, Month.NOVEMBER, 24));
       add(LocalDate.of(2021, Month.NOVEMBER, 25));
       add(LocalDate.of(2021, Month.NOVEMBER, 26));
+      add(LocalDate.of(2022, Month.JANUARY, 17));
+      add(LocalDate.of(2022, Month.FEBRUARY, 17));
+      add(LocalDate.of(2022, Month.FEBRUARY, 18));
+      add(LocalDate.of(2022, Month.FEBRUARY, 21));
+      add(LocalDate.of(2022, Month.APRIL, 15));
+      add(LocalDate.of(2022, Month.MAY, 30));
+
     }
   };
 
   static {
     // Winter break is December 20 to January 2.
-    LocalDate firstDayOfBreak = LocalDate.of(2021, Month.DECEMBER, 20);
+    LocalDate firstDayOfWinterBreak = LocalDate.of(2021, Month.DECEMBER, 20);
     for (int i = 0; i < 7 * 2; i++) {
-      holidays.add(firstDayOfBreak.plusDays(i));
+      holidays.add(firstDayOfWinterBreak.plusDays(i));
     }
 
-    schoolDays = getSchoolDaysMap();
+    // Spring break is March 11 to March 27.
+    LocalDate firstDayOfSpringBreak = LocalDate.of(2022, Month.MARCH, 12);
+    for (int i = 0; i < 7 * 2; i++) {
+      holidays.add(firstDayOfSpringBreak.plusDays(i));
+    }
   }
+
+  // ** Helper functions **
 
   // Return start LocalDateTime for a block based on the date and blockNum.
   public LocalDateTime getStart(LocalDate date, int blockNum) {
@@ -59,8 +82,6 @@ public abstract class Schedule {
     Block blk = getBlockNumFromName(blockName);
     return LocalDateTime.of(date, blk.endTime);
   }
-
-  // ** Helper functions **
 
   public Block getBlockNumFromName(String targetBlock) {
     // e.g. in this schedule, which index does block A have?
@@ -87,7 +108,7 @@ public abstract class Schedule {
     return blocksToday;
   }
 
-  private static boolean isThereSchool(LocalDate date) {
+  private boolean isThereSchool(LocalDate date) {
     DayOfWeek day = date.getDayOfWeek();
     if (day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY) {
       return false;
@@ -98,25 +119,32 @@ public abstract class Schedule {
     return true;
   }
 
-  public static TreeMap getSchoolDaysMap() {
-    // Returns String dates, int dayType map.
-    TreeMap schoolDays = new TreeMap();
+  public int getDayType() {
+    // Returns -1 if not a school day.
+    if (!isThereSchool(this.date)) {
+      return -1;
+    }
     int dayTypeIdx = 0;
     int dayCounter = 0;
     // TODO: This could be a lot cleaner.
     while (true) {
       LocalDate thisDate = firstDayOfSchool.plusDays(dayCounter);
       if (thisDate.isAfter(lastDayOfSchool)) {
-        break;
+        return -1;
+      }
+      if (thisDate.equals(this.date)) {
+        return DAY_TYPES[dayTypeIdx];
       }
       if (isThereSchool(thisDate)) {
-        schoolDays.put(thisDate.toString(), DAY_TYPES[dayTypeIdx]);
         dayTypeIdx++;
         dayTypeIdx = dayTypeIdx % DAY_TYPES.length;
       }
       dayCounter++;
     }
-    return schoolDays;
+  }
+
+  public boolean isThereBlockToday(String blockName) {
+    return this.blocks.contains(blockName);
   }
 
 }

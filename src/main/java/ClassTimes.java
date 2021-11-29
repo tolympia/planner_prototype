@@ -89,6 +89,33 @@ public class ClassTimes {
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
     }
 
+    private static Event setUpDayEvent(
+            LocalDate targetDate, boolean us, String colorId) {
+
+        Schedule sch = GAPlanner2122.getScheduleForDate(targetDate, us, true);
+
+        String eventName = "MS Day " + sch.getDayType();
+        // Make a calendar event at that time.
+        Event event = new Event()
+                .setSummary(eventName)
+                .setDescription("");
+
+        if (colorId != "") {
+            event.setColorId(colorId);
+        }
+
+        String dateAsString = targetDate.toString();
+
+        EventDateTime startEventDateTime = new EventDateTime().setDate(new DateTime(dateAsString));
+        EventDateTime endEventDateTime = new EventDateTime().setDate(new DateTime(dateAsString));
+
+        event.setStart(startEventDateTime);
+        event.setEnd(endEventDateTime);
+
+        System.out.println("Finished setting up event:");
+        return event;
+    }
+
     private static Event setUpClassEvent(
             LocalDate targetDate,
             String block,
@@ -96,8 +123,8 @@ public class ClassTimes {
             boolean upperclassmen,
             String colorId) {
 
-        // Time zone wrangling.
-        Schedule sch = GAPlanner2122.getScheduleForDate(targetDate, upperclassmen);
+        // TODO: Adapt for MS.
+        Schedule sch = GAPlanner2122.getScheduleForDate(targetDate, true, upperclassmen);
         LocalDateTime unzonedStartTime = sch.getStart(targetDate, block);
         LocalDateTime unzonedEndTime = sch.getEnd(targetDate, block);
         System.out.println("Start time for the block:" + unzonedStartTime);
@@ -160,9 +187,10 @@ public class ClassTimes {
 
     private static void deleteAllEvents(Calendar service) throws IOException, GeneralSecurityException {
         Scanner sc = new Scanner(System.in);
+        System.out.println("** DELETING ALL EVENTS. **");
         System.out.println("What's your calendar ID?");
         String calendarId = sc.nextLine();
-        System.out.println("Deleting all events.");
+        System.out.println("Deleting everything.");
         String pageToken = null;
         do {
             Events events = service.events().list(calendarId).setPageToken(pageToken).execute();
@@ -186,6 +214,29 @@ public class ClassTimes {
         } while (pageToken != null);
     }
 
+    private static ArrayList<LocalDate> getSchoolDates(String division) {
+      ArrayList<LocalDate> schoolDates = new ArrayList<>();
+      LocalDate thisDate, endDate;
+      if (division.equals("ms")) {
+        thisDate = GAPlanner2122.msFirstDay;
+        endDate = GAPlanner2122.msLastDay;
+      } else {
+        thisDate = GAPlanner2122.usFirstDay;
+        endDate = GAPlanner2122.usLastDay;
+      }
+      while (thisDate.isBefore(endDate)) {
+        Schedule sched = GAPlanner2122.getScheduleForDate(thisDate, division.equals("us"), true);
+        if (sched != null) {  // This is a real school day.
+          schoolDates.add(thisDate);
+        }
+        thisDate = thisDate.plusDays(1);
+      }
+
+      System.out.println(
+              "Total number of school days in this semester: " + schoolDates.size());
+      return schoolDates;
+    }
+
     public static void createEventsFromForm() throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -197,6 +248,8 @@ public class ClassTimes {
         System.out.println("What is your name?");
         String username = sc.nextLine();
         System.out.println("Hi there, " + username + "!");
+        System.out.println("Division? ms/us:");
+        String division = sc.nextLine();
 
         String calendarId;
         if (username.equals("tina")) {
@@ -205,14 +258,12 @@ public class ClassTimes {
             System.out.println("What's your calendar ID?");
             calendarId = sc.nextLine();
         }
+
         // Be careful with this!
         // deleteAllEvents(service);
 
         // Get list of school days.
-        Map schoolDays = Schedule.schoolDays;
-        ArrayList<String> schoolDates = new ArrayList<String>(schoolDays.keySet());
-        System.out.println(
-                "Total number of school days in this semester: " + schoolDates.size());
+        ArrayList<LocalDate> schoolDates = getSchoolDates(division);
 
         ArrayList<String> courseNames = new ArrayList<>();
         ArrayList<String> colors = new ArrayList<>();
@@ -242,7 +293,7 @@ public class ClassTimes {
             String colorId = colors.get(i);
 
             // Generate list of events (classes) to create for this course.
-            ArrayList<Event> allEvents = generateListOfEventsToCreate(schoolDates, schoolDays, block, className, upperclassmen, colorId);
+            ArrayList<Event> allEvents = generateListOfEvents(schoolDates, block, className, upperclassmen, colorId);
 
             actuallyCreateEvents(service, allEvents, calendarId);
         }
@@ -251,7 +302,8 @@ public class ClassTimes {
     }
 
     public static void main(String... args) throws IOException, GeneralSecurityException {
-        createEventsByCommand();
+        // createEventsByCommand();
+        createDayEvents();
     }
 
     public static void createEventsByCommand() throws IOException, GeneralSecurityException {
@@ -260,12 +312,6 @@ public class ClassTimes {
         Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
-
-        // Get list of school days.
-        Map schoolDays = Schedule.schoolDays;
-        ArrayList<String> schoolDates = new ArrayList<String>(schoolDays.keySet());
-        System.out.println(
-                "Total number of school days in this semester: " + schoolDates.size());
 
         Scanner sc = new Scanner(System.in);
         System.out.println("What is your name?");
@@ -279,6 +325,9 @@ public class ClassTimes {
             System.out.println("What's your calendar ID?");
             calendarId = sc.nextLine();
         }
+
+        // Get list of school days.
+        ArrayList<LocalDate> schoolDates = getSchoolDates("us");
 
         while (true) {
             System.out.println("Block? e.g. `A` [or type 'Q' to quit]");
@@ -311,20 +360,74 @@ public class ClassTimes {
             }
 
             // Generate list of events to create.
-            ArrayList<Event> allEvents = generateListOfEventsToCreate(schoolDates, schoolDays, block, className, upperclassmen, colorId);
+            ArrayList<Event> allEvents = generateListOfEvents(schoolDates, block, className, upperclassmen, colorId);
 
             actuallyCreateEvents(service, allEvents, calendarId);
         }
     }
 
-    private static ArrayList<Event> generateListOfEventsToCreate(ArrayList<String> schoolDates, Map schoolDays, String block, String className, boolean upperclassmen, String colorId) {
+    public static void createDayEvents() throws IOException, GeneralSecurityException {
+        // Build a new authorized API client service.
+        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+                .setApplicationName(APPLICATION_NAME)
+                .build();
+
+        deleteAllEvents(service);
+        Scanner sc = new Scanner(System.in);
+        System.out.println("What is your name?");
+        String username = sc.nextLine();
+        System.out.println("Hi there, " + username + "!");
+
+        String calendarId;
+        String division;
+
+        if (username.equals("tina")) {
+            calendarId = TINAS_CALENDAR_ID;
+            division = "us";
+        } else if (username.equals("ms")) {
+            calendarId = "c_b7dgu3ukbsfnti6mqgqi0svojg@group.calendar.google.com";
+            division = "ms";
+        } else {
+            System.out.println("What's your calendar ID?");
+            calendarId = sc.nextLine();
+            division = "us";
+        }
+
+        String colorId = "";
+        boolean us = division.equals("us");
+        // Get list of school days.
+        ArrayList<LocalDate> schoolDates = getSchoolDates(division);
+        System.out.println(schoolDates);
+
+        // Generate list of events to create.
+        ArrayList<Event> allEvents = new ArrayList<Event>();
+        for (int i = 0; i < schoolDates.size(); i++) {
+            LocalDate targetDate = schoolDates.get(i);
+            Schedule sched = GAPlanner2122.getScheduleForDate(
+              targetDate, us, true);
+            if (sched != null) {
+                System.out.println("That date is a Day " + sched.getDayType());
+                Event event = setUpDayEvent(targetDate, us, colorId);
+                allEvents.add(event);
+            } else {
+                System.out.println("Not a school day");
+            }
+        }
+
+        System.out.println("Generated " + allEvents.size() + " total events.");
+        actuallyCreateEvents(service, allEvents, calendarId);
+    }
+
+    private static ArrayList<Event> generateListOfEvents(ArrayList<LocalDate> schoolDates, String block, String className, boolean upperclassmen, String colorId) {
       ArrayList<Event> allEvents = new ArrayList<Event>();
       for (int i = 0; i < schoolDates.size(); i++) {
-          // This is iffy. Shouldn't index into a set like this.
-          String dateString = schoolDates.get(i);
-          LocalDate targetDate = LocalDate.parse(dateString);
-          System.out.println("That date is a Day " + schoolDays.get(dateString));
-          if (GAPlanner2122.isThereClassToday(targetDate, block, schoolDays)) {
+          LocalDate targetDate = schoolDates.get(i);
+          // TODO: Adapt for MS.
+          Schedule sched = GAPlanner2122.getScheduleForDate(
+            targetDate, true, upperclassmen);
+          System.out.println("That date is a Day " + sched.getDayType());
+          if (sched.isThereBlockToday(block)) {
               Event event = setUpClassEvent(targetDate, block, className, upperclassmen, colorId);
               allEvents.add(event);
           } else {

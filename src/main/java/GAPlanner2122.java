@@ -11,32 +11,40 @@ public class GAPlanner2122 {
   // Keys are LocalDates, values are Day.
   private static Map<LocalDate, Schedule> adjustedSchedules = new TreeMap();
 
-  public static boolean isThereClassToday(LocalDate date, String block, Map schoolDays) {
-    // TODO: Look up specific schedule for this day (Use adjustedSchedules)
-    Schedule today = getScheduleForDate(date, false);
-    ArrayList<String> blocksToday = today.blocksForDayType();
-    return blocksToday.contains(block);
-  }
+  public static LocalDate msFirstDay = LocalDate.of(2021, Month.SEPTEMBER, 8);
+  public static LocalDate msLastDay = LocalDate.of(2022, Month.JUNE, 1);;
+  public static LocalDate usFirstDay = LocalDate.of(2021, Month.SEPTEMBER, 13);
+  public static LocalDate usLastDay = LocalDate.of(2022, Month.JANUARY, 12);
 
-  public static Schedule getScheduleForDate(LocalDate date, boolean upperclassmen) {
+  public static Schedule getScheduleForDate(LocalDate date, boolean upperSchool, boolean upperclassmen) {
     DayOfWeek day = date.getDayOfWeek();
 
     Schedule schedule;
-    boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
-    if (flexDay) {
-      schedule = new USFlexDay(date, upperclassmen);
-    } else if (day == DayOfWeek.FRIDAY) {
-      schedule = new USFriday(date, upperclassmen);
-    } else {  // Wed schedule
-      schedule = new USWednesday(date, upperclassmen);
+    if (upperSchool) {
+      boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
+      if (flexDay) {
+        schedule = new USFlexDay(date, upperclassmen);
+      } else if (day == DayOfWeek.FRIDAY) {
+        schedule = new USFriday(date, upperclassmen);
+      } else {  // Wed schedule
+        schedule = new USWednesday(date, upperclassmen);
+      }
+    } else {  // Middle school schedule.
+      schedule = new MSMTTh78(date);
+    }
+    if (schedule.getDayType() == -1) {
+      // Not a real school day.
+      return null;
     }
     return schedule;
 
   }
 
-  public static LocalDateTime getTimeForBlock(LocalDate date, String blockChar, boolean upperclassmen, boolean start) {
+  public static LocalDateTime getTimeForBlock(
+    LocalDate date, boolean upperSchool, String blockChar,
+    boolean upperclassmen, boolean start) {
 
-    Schedule schedule = getScheduleForDate(date, upperclassmen);
+    Schedule schedule = getScheduleForDate(date, upperSchool, upperclassmen);
 
     // TODO: Move this logic to Schedule.
     ArrayList<String> blockCharsToday = schedule.blocksForDayType();
@@ -56,10 +64,9 @@ public class GAPlanner2122 {
   }
 
   public static void demo() {
-    Map schoolDays = Schedule.getSchoolDaysMap();
-    ArrayList<String> schoolDates = new ArrayList<String>(schoolDays.keySet());
-
     Scanner sc = new Scanner(System.in);
+    System.out.println("Division? ms or us:");
+    String division = sc.nextLine();
     System.out.println("Which date? yyyy-mm-dd format:");
     String desiredDate = sc.nextLine();
     System.out.println("Which block?:");
@@ -67,15 +74,17 @@ public class GAPlanner2122 {
     System.out.println("1 for underclassmen, 2 for upper:");
     int year = sc.nextInt();
     LocalDate desiredDateObj = LocalDate.parse(desiredDate);
-    System.out.println("That date is a Day " + schoolDays.get(desiredDate));
-    Schedule sched = getScheduleForDate(desiredDateObj, year == 2);
+    boolean us = division == "us";
+    Schedule sched = getScheduleForDate(desiredDateObj, us, year == 2);
+    System.out.println("That date is a Day " + sched.getDayType());
     ArrayList<String> blocksToday = sched.blocksForDayType();
     System.out.println("Blocks that day :" + blocksToday);
-    LocalDateTime blockStart = getTimeForBlock(desiredDateObj, desiredBlock, year == 2, true);
+    LocalDateTime blockStart = getTimeForBlock(
+      desiredDateObj, us, desiredBlock, year == 2, true);
     System.out.println("Start time for the block:" + blockStart);
   }
 
   public static void main(String[] args) {
-    // demo();
+    demo();
   }
 }

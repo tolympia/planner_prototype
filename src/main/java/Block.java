@@ -12,6 +12,7 @@ public class Block {
   public Block(LocalTime startTime, LocalTime endTime) {
     this.startTime = startTime;
     this.endTime = endTime;
+    this.durationMinutes = (int) Duration.between(startTime, endTime).toMinutes();
   }
 
   // Constructor where end time is inferred from duration.
@@ -19,4 +20,7 @@ public class Block {
     this(startTime, startTime.plusMinutes(durationMinutes));
   }
 
+  public String toString() {
+    return "start: " + this.startTime + ", end: " + this.endTime + " (" + this.durationMinutes + ")";
+  }
 }
