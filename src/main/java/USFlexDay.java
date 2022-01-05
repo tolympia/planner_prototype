@@ -1,7 +1,7 @@
 import java.util.*;
 import java.time.*;
 
-public class USFlexDay extends Schedule {
+public class USFlexDay extends USSchedule {
   public USFlexDay(LocalDate date, boolean upperclassmen) {
     super(date);
     blocks = new ArrayList<Block>() {

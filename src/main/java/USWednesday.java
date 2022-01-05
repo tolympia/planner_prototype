@@ -1,7 +1,7 @@
 import java.util.*;
 import java.time.*;
 
-public class USWednesday extends Schedule {
+public class USWednesday extends USSchedule {
   public USWednesday(LocalDate date, boolean upperclassmen) {
     super(date);
     blocks = new ArrayList<Block>() {
@@ -15,7 +15,7 @@ public class USWednesday extends Schedule {
     };
 
     if (upperclassmen) {
-      blocks.set(3, new Block(LocalTime.of(12, 30), 60));
+      blocks.set(3, new Block(LocalTime.of(12, 30), 50));
     }
   }
 

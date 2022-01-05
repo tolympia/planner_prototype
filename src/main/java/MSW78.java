@@ -2,20 +2,20 @@ import java.util.*;
 import java.time.*;
 
 
-public class MSMTTh78 extends MSSchedule {
-  public MSMTTh78(LocalDate date, ArrayList<ArrayList<String>> daysToBlocks) {
+public class MSW78 extends MSSchedule {
+  public MSW78(LocalDate date, ArrayList<ArrayList<String>> daysToBlocks) {
     super(date);
 
     this.blocks = new ArrayList<Block>() {
       {
-        add(new Block(LocalTime.of(7, 45), 10));   // Advisory.
-        add(new Block(LocalTime.of(8, 00), 50));   // 1st period.
-        add(new Block(LocalTime.of(8, 55), 50));
-        add(new Block(LocalTime.of(9, 50), 50));  // 3rd period.
-        add(new Block(LocalTime.of(10, 45), 5));  // Snack.
-        add(new Block(LocalTime.of(10, 55), 50));  // 4th period.
-        add(new Block(LocalTime.of(11, 50), 50));  // 5th period.
-        add(new Block(LocalTime.of(12, 45), 25));  // Lunch.
+        add(new Block(LocalTime.of(8, 45), 10));   // Advisory.
+        add(new Block(LocalTime.of(9, 00), 35));   // 1st period.
+        add(new Block(LocalTime.of(9, 40), 35));  // 2nd period.
+        add(new Block(LocalTime.of(10, 20), 35));  // 3rd period.
+        add(new Block(LocalTime.of(11, 05), 10));  // Snack.
+        add(new Block(LocalTime.of(11, 20), 35));  // 4th period.
+        add(new Block(LocalTime.of(12, 00), 35));  // 5th period.
+        add(new Block(LocalTime.of(12, 35), 35));  // Lunch.
       }
     };
 
