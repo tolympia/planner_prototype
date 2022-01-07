@@ -16,7 +16,7 @@ public class MSMTTh56 extends MSSchedule {
         add(new Block(LocalTime.of(10, 55), 45));  // 4th period.
         add(new Block(LocalTime.of(11, 45), 30));  // Lunch.
         add(new Block(LocalTime.of(12, 20), 50));  // 5th period.
-        add(new Block(LocalTime.of(13, 15), 50));  // Advisory.
+        add(new Block(LocalTime.of(13, 15), 40));  // Advisory.
         add(new Block(LocalTime.of(14, 00), 40));  // 6th.
         add(new Block(LocalTime.of(14, 45), 40));  // 7th.
       }
@@ -26,15 +26,15 @@ public class MSMTTh56 extends MSSchedule {
       ArrayList<String> blocksToday = daysToBlocks.get(this.dayType - 1);
       this.blockNames = new ArrayList<String>() {
         {
-          add("Advisory"); // Advisory.
+          add("Advisory (V/VI)"); // Advisory.
           add(blocksToday.get(1));  // For grades 5-6, there is a 0th period.
           add(blocksToday.get(2));
-          add("Snack/Recess");
+          add("Snack/Recess (V/VI)");
           add(blocksToday.get(3));
           add(blocksToday.get(4));
-          add("Lunch");
+          add("Lunch (V/VI)");
           add(blocksToday.get(5));
-          add("Advisory");
+          add("Advisory (V/VI)");
           add(blocksToday.get(6));
           add(blocksToday.get(7));
         }

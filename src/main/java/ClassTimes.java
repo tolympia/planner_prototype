@@ -54,7 +54,18 @@ public class ClassTimes {
     private static final String TIMEZONE = "America/New_York";
 
     public static void main(String... args) throws IOException, GeneralSecurityException {
-        createUSEventsFromForm();
+        String mode = args[0];
+        if (mode.equals("delete")) {
+          deleteAllEvents();
+        } else if (mode.equals("ms")) {
+          createMSEventsFromForm();
+        } else if (mode.equals("us")) {
+          createUSEventsFromForm();
+        } else if (mode.equals("days")) {
+          createDayEvents();
+        } else {
+          System.out.println("Invalid mode given.");
+        }
     }
 
     /**
@@ -131,7 +142,7 @@ public class ClassTimes {
         int counter = 0;
         if (sc.nextLine().equals("y")) {
           for (int i = 0; i < allEvents.size(); i++) {
-              if (counter % 20 == 1) {
+              if (counter % 10 == 1) {
                   System.out.println(
                           "Sleeping for 1 second to prevent exceeding rate limit.");
                   // Note: If we create events too quickly in succession,
@@ -149,16 +160,25 @@ public class ClassTimes {
         }
     }
 
-    private static void deleteAllEvents(Calendar service, String calendarId) throws IOException, GeneralSecurityException {
+    private static void deleteAllEvents() throws IOException, GeneralSecurityException {
         Scanner sc = new Scanner(System.in);
         System.out.println("** DELETING ALL EVENTS. **");
+
+        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        Calendar service = new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+                .setApplicationName(APPLICATION_NAME)
+                .build();
+
+        System.out.println("Calendar ID?");
+        String calendarId = sc.nextLine();
+
         String pageToken = null;
         do {
             Events events = service.events().list(calendarId).setPageToken(pageToken).execute();
             List<Event> items = events.getItems();
             int counter = 0;
             for (Event event : items) {
-                if (counter % 20 == 1) {
+                if (counter % 10 == 1) {
                     System.out.println(
                             "Sleeping for .5 second to prevent exceeding rate limit.");
                     // Note: If we delete events too quickly in succession,
@@ -175,13 +195,12 @@ public class ClassTimes {
         } while (pageToken != null);
     }
 
-    private static ArrayList<ArrayList<String>> getDaysToBlocksMapping(String pathToCsv, boolean sevenEight) throws IOException {
-      // TODO: Add logic for inserting numbered blocks into overall schedule.
+    private static ArrayList<ArrayList<String>> getDaysToBlocksMapping(String pathToCsv) throws IOException {
       BufferedReader csvReader = new BufferedReader(new FileReader(pathToCsv));
       ArrayList<ArrayList<String>> all = new ArrayList<>();
       // Grades 5-6 have 8 total periods, grades 7-8 have 6.
-      int numPeriods = sevenEight ? 5 : 8;
       int numDays = 6;
+      int numPeriods = 8;
       for (int i = 0; i < numDays; i++) {
         all.add(new ArrayList<String>());
       }
@@ -222,8 +241,7 @@ public class ClassTimes {
           sch = getUSScheduleForDate(thisDate, true);
         } else {
           // TODO: Extract method.
-          ArrayList<ArrayList<String>> mapping = getDaysToBlocksMapping(
-            "example.csv", true);
+          ArrayList<ArrayList<String>> mapping = getDaysToBlocksMapping("example.csv");
           sch = getMSScheduleForDate(thisDate, mapping, true);
         }
         if (sch != null) {  // This is a real school day.
@@ -320,7 +338,7 @@ public class ClassTimes {
         boolean sevenEight = sc.nextLine().equals("y");
         System.out.println("Please enter filename where schedule is stored:");
         String form = sc.nextLine();
-        ArrayList<ArrayList<String>> daysToBlocks = getDaysToBlocksMapping(form, sevenEight);
+        ArrayList<ArrayList<String>> daysToBlocks = getDaysToBlocksMapping(form);
 
         ArrayList<Event> allEvents = new ArrayList<>();
         // Loop through each school date.
@@ -414,7 +432,7 @@ public class ClassTimes {
         ArrayList<Event> allEvents = new ArrayList<Event>();
         for (int i = 0; i < schoolDates.size(); i++) {
             LocalDate targetDate = schoolDates.get(i);
-            Schedule sch = getMSScheduleForDate(targetDate, getDaysToBlocksMapping("example.csv", true), true);
+            Schedule sch = getMSScheduleForDate(targetDate, getDaysToBlocksMapping("example.csv"), true);
             if (sch != null) {
                 System.out.println("That date is a Day " + sch.getDayType());
                 // Make a calendar event for that day.

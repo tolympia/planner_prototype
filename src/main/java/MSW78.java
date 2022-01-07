@@ -16,6 +16,8 @@ public class MSW78 extends MSSchedule {
         add(new Block(LocalTime.of(11, 20), 35));  // 4th period.
         add(new Block(LocalTime.of(12, 00), 35));  // 5th period.
         add(new Block(LocalTime.of(12, 35), 35));  // Lunch.
+        add(new Block(LocalTime.of(13, 15), 40));  // Assembly.
+        // TODO: Figure out VII 6th/7th period, VIII arts situation.
       }
     };
 
@@ -23,14 +25,15 @@ public class MSW78 extends MSSchedule {
       ArrayList<String> blocksToday = daysToBlocks.get(this.dayType - 1);
       this.blockNames = new ArrayList<String>() {
         {
-          add("Advisory"); // Advisory.
-          add(blocksToday.get(0));
+          add("Advisory (VII/VIII)"); // Advisory.
           add(blocksToday.get(1));
-          add(blocksToday.get(2));  // 3rd period.
-          add("Snack");  // Snack.
-          add(blocksToday.get(3));  // 4th period.
-          add(blocksToday.get(4));  // 5th period.
-          add("Lunch");  // Lunch.
+          add(blocksToday.get(2));
+          add(blocksToday.get(3));  // 3rd period.
+          add("Snack (VII/VIII)");  // Snack.
+          add(blocksToday.get(4));  // 4th period.
+          add(blocksToday.get(5));  // 5th period.
+          add("Lunch (VII/VIII)");  // Lunch.
+          add("Assembly (VII/VIII)");  // Lunch.
         }
       };
       printSummary();

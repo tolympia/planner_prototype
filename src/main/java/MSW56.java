@@ -26,15 +26,15 @@ public class MSW56 extends MSSchedule {
       ArrayList<String> blocksToday = daysToBlocks.get(this.dayType - 1);
       this.blockNames = new ArrayList<String>() {
         {
-          add("Advisory"); // Advisory.
+          add("Advisory (V/VI)"); // Advisory.
           add(blocksToday.get(1)); // 1st period (NOT 0th).
           add(blocksToday.get(2));
-          add("Snack/Recess");  // Snack.
+          add("Snack/Recess (V/VI)");  // Snack.
           add(blocksToday.get(3));
           add(blocksToday.get(4));
-          add("Lunch");  // Lunch.
+          add("Lunch (V/VI)");  // Lunch.
           add(blocksToday.get(5));
-          add("Assembly");
+          add("Assembly (V/VI)");
           add(blocksToday.get(6));
           add(blocksToday.get(7));
         }

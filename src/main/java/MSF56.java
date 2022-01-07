@@ -26,15 +26,15 @@ public class MSF56 extends MSSchedule {
       ArrayList<String> blocksToday = daysToBlocks.get(this.dayType - 1);
       this.blockNames = new ArrayList<String>() {
         {
-          add("Advisory"); // Advisory.
+          add("Advisory (V/VI)"); // Advisory.
           add(blocksToday.get(0));  // 0th.
           add(blocksToday.get(1));
           add(blocksToday.get(2));
-          add("Snack");
+          add("Snack (V/VI)");
           add(blocksToday.get(3));
           add(blocksToday.get(4));
           add(blocksToday.get(5));
-          add("Lunch");
+          add("Lunch (V/VI)");
           add(blocksToday.get(6));
           add(blocksToday.get(7));  // 7th.
         }

@@ -9,6 +9,7 @@ public class MSF78 extends MSSchedule {
     this.blocks = new ArrayList<Block>() {
       {
         add(new Block(LocalTime.of(7, 45), 5));   // Advisory.
+        add(new Block(LocalTime.of(7, 55), 45));  // DEAR VII / Arts VIII
         add(new Block(LocalTime.of(8, 45), 40));  // 1st period.
         add(new Block(LocalTime.of(9, 30), 5));  // Snack.
         add(new Block(LocalTime.of(9, 40), 40));  // 2nd period.
@@ -23,14 +24,15 @@ public class MSF78 extends MSSchedule {
       ArrayList<String> blocksToday = daysToBlocks.get(this.dayType - 1);
       this.blockNames = new ArrayList<String>() {
         {
-          add("Advisory"); // Advisory.
-          add(blocksToday.get(0));
-          add("Snack");  // Snack.
+          add("Advisory (VII/VIII)"); // Advisory.
+          add("DEAR VII / Arts VIII");
           add(blocksToday.get(1));
-          add(blocksToday.get(2));  // 3rd period.
-          add(blocksToday.get(3));  // 4th period.
-          add("Lunch");  // Lunch.
-          add(blocksToday.get(4));  // 5th period.
+          add("Snack (VII/VIII)");  // Snack.
+          add(blocksToday.get(2));
+          add(blocksToday.get(3));  // 3rd period.
+          add(blocksToday.get(4));  // 4th period.
+          add("Lunch (VII/VIII)");  // Lunch.
+          add(blocksToday.get(5));  // 5th period.
         }
       };
       printSummary();
