@@ -6,9 +6,11 @@ public abstract class USSchedule extends Schedule {
   protected String[] ALL_BLOCKS = {"A", "B", "C", "D", "E", "F", "G"};
   protected int NUM_BLOCKS_PER_DAY = 5;
   protected int[] DAY_TYPES = {1, 2, 3, 4, 5, 6, 7};  // e.g., Day 1 in Planner.
+  public static LocalDate firstDayOfSchool = LocalDate.of(2022, Month.SEPTEMBER, 12);
+//  public static LocalDate firstDayOfSchool = LocalDate.of(2023, Month.JANUARY, 25);
 
-  public static LocalDate firstDayOfSchool = LocalDate.of(2022, Month.JANUARY, 26);
-  public static LocalDate lastDayOfSchool = LocalDate.of(2022, Month.MAY, 25);
+  public static LocalDate lastDayOfSchool = LocalDate.of(2023, Month.JANUARY, 11);
+//  public static LocalDate lastDayOfSchool = LocalDate.of(2023, Month.MAY, 24);
 
   public USSchedule(LocalDate date) {
     this.date = date;
@@ -19,31 +21,55 @@ public abstract class USSchedule extends Schedule {
   // Dates where we don't have school.
   public static ArrayList<LocalDate> holidays = new ArrayList<LocalDate>() {
     {
-      add(LocalDate.of(2021, Month.SEPTEMBER, 16));
-      add(LocalDate.of(2021, Month.OCTOBER, 11));
-      add(LocalDate.of(2021, Month.NOVEMBER, 24));
-      add(LocalDate.of(2021, Month.NOVEMBER, 25));
-      add(LocalDate.of(2021, Month.NOVEMBER, 26));
-      add(LocalDate.of(2022, Month.JANUARY, 17));
-      add(LocalDate.of(2022, Month.FEBRUARY, 17));
-      add(LocalDate.of(2022, Month.FEBRUARY, 18));
-      add(LocalDate.of(2022, Month.FEBRUARY, 21));
-      add(LocalDate.of(2022, Month.APRIL, 15));
-      add(LocalDate.of(2022, Month.APRIL, 29));
-      add(LocalDate.of(2022, Month.MAY, 30));
+      // Semester 1.
+      add(LocalDate.of(2022, Month.SEPTEMBER, 26));
+      add(LocalDate.of(2022, Month.OCTOBER, 5));
+      add(LocalDate.of(2022, Month.OCTOBER, 10));
+      add(LocalDate.of(2022, Month.NOVEMBER, 23));
+      add(LocalDate.of(2022, Month.NOVEMBER, 24));
+      add(LocalDate.of(2022, Month.NOVEMBER, 25));
+      add(LocalDate.of(2023, Month.JANUARY, 2));
 
+      // Semester 2.
+      add(LocalDate.of(2023, Month.JANUARY, 16));
+      add(LocalDate.of(2023, Month.FEBRUARY, 16));
+      add(LocalDate.of(2023, Month.FEBRUARY, 17));
+      add(LocalDate.of(2023, Month.FEBRUARY, 20));
+      add(LocalDate.of(2023, Month.APRIL, 7));
+      add(LocalDate.of(2023, Month.APRIL, 28));  // CHARTER DAY.
+    }
+  };
+
+  public static TreeMap<LocalDate, String> adjustedSchedules = new TreeMap<LocalDate, String>() {
+    {
+      put(LocalDate.of(2022, Month.SEPTEMBER, 15), "Adjusted1");
+      put(LocalDate.of(2022, Month.OCTOBER, 11), "Adjusted1");
+      put(LocalDate.of(2022, Month.OCTOBER, 20), "Adjusted1");
+      put(LocalDate.of(2023, Month.JANUARY, 5), "Adjusted1");
+      put(LocalDate.of(2023, Month.FEBRUARY, 9), "Adjusted1");
+      put(LocalDate.of(2023, Month.APRIL, 25), "Adjusted1");
+      put(LocalDate.of(2023, Month.APRIL, 27), "Adjusted1");
+      put(LocalDate.of(2023, Month.MAY, 11), "Adjusted1");
+      put(LocalDate.of(2022, Month.SEPTEMBER, 29), "Adjusted2");
+      put(LocalDate.of(2022, Month.OCTOBER, 28), "USAdjustedArtsAssembly");
+      put(LocalDate.of(2023, Month.MAY, 18), "USAdjustedCommencement");
+      put(LocalDate.of(2023, Month.MAY, 15), "USAdjustedHonors");
+      put(LocalDate.of(2022, Month.NOVEMBER, 22), "USAdjustedIngathering");
+      put(LocalDate.of(2023, Month.JANUARY, 26), "USAdjustedMLK");
+      put(LocalDate.of(2023, Month.MAY, 17), "USAdjustedRehearsal");
+      put(LocalDate.of(2022, Month.DECEMBER, 16), "USAdjustedWinterHoliday");
     }
   };
 
   static {
-    // Winter break is December 20 to January 2.
-    LocalDate firstDayOfWinterBreak = LocalDate.of(2021, Month.DECEMBER, 20);
+    // Winter break is December 19 to January 1.
+    LocalDate firstDayOfWinterBreak = LocalDate.of(2022, Month.DECEMBER, 19);
     for (int i = 0; i < 7 * 2; i++) {
       holidays.add(firstDayOfWinterBreak.plusDays(i));
     }
 
-    // Spring break is March 11 to March 27.
-    LocalDate firstDayOfSpringBreak = LocalDate.of(2022, Month.MARCH, 12);
+    // Spring break is March 13 to March 24.
+    LocalDate firstDayOfSpringBreak = LocalDate.of(2023, Month.MARCH, 13);
     for (int i = 0; i < 7 * 2; i++) {
       holidays.add(firstDayOfSpringBreak.plusDays(i));
     }

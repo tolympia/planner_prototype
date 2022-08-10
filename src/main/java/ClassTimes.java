@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit; // for `sleep`
 
 public class ClassTimes {
     private static final String TINAS_CALENDAR_ID = "c_3u311s0vrhfpfubgs9p5jjhheg@group.calendar.google.com";
-    private static final String TEST_CALENDAR_ID = "c_ju4rnqanepb41td88j2ovut84c@group.calendar.google.com";
+    private static final String TEST_CALENDAR_ID = "c_k5ih2v866kvl19bikes80u10sk@group.calendar.google.com";
     private static final String APPLICATION_NAME = "Google Calendar API Demo";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
@@ -497,17 +497,45 @@ public class ClassTimes {
       DayOfWeek day = date.getDayOfWeek();
 
       USSchedule schedule;
-      boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
-      if (flexDay) {
-        schedule = new USFlexDay(date, upperclassmen);
-      } else if (day == DayOfWeek.FRIDAY) {
-        schedule = new USFriday(date, upperclassmen);
-      } else {  // Wed schedule
-        schedule = new USWednesday(date, upperclassmen);
+
+      // Determine if this is an adjusted schedule day.
+      if (USSchedule.adjustedSchedules.containsKey(date)) {
+          String adjustedType = USSchedule.adjustedSchedules.get(date);
+          if (adjustedType.equals("Adjusted1")) {
+              schedule = new USAdjusted1(date, upperclassmen);
+          } else if (adjustedType.equals("Adjusted2")) {
+              schedule = new USAdjusted2(date, upperclassmen);
+          } else if (adjustedType.equals("USAdjustedArtsAssembly")) {
+              schedule = new USAdjustedArtsAssembly(date, upperclassmen);
+          } else if (adjustedType.equals("USAdjustedCommencement")) {
+              schedule = new USAdjustedCommencement(date, upperclassmen);
+          } else if (adjustedType.equals("USAdjustedHonors")) {
+              schedule = new USAdjustedHonors(date, upperclassmen);
+          } else if (adjustedType.equals("USAdjustedIngathering")) {
+              schedule = new USAdjustedIngathering(date, upperclassmen);
+          } else if (adjustedType.equals("USAdjustedMLK")) {
+              schedule = new USAdjustedMLK(date, upperclassmen);
+          } else if (adjustedType.equals("USAdjustedRehearsal")) {
+              schedule = new USAdjustedRehearsal(date, upperclassmen);
+          } else if (adjustedType.equals("USAdjustedWinterHoliday")) {
+              schedule = new USAdjustedWinterHoliday(date, upperclassmen);
+          } else {  // Treat as default.
+              schedule = new USAdjusted1(date, upperclassmen);
+          }
       }
-      if (schedule.getDayType() == -1) {
-        // Not a real school day.
-        return null;
+      else {
+          boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
+          if (flexDay) {
+              schedule = new USFlexDay(date, upperclassmen);
+          } else if (day == DayOfWeek.FRIDAY) {
+              schedule = new USFriday(date, upperclassmen);
+          } else {  // Wed schedule
+              schedule = new USWednesday(date, upperclassmen);
+          }
+          if (schedule.getDayType() == -1) {
+              // Not a real school day.
+              return null;
+          }
       }
       return schedule;
     }
