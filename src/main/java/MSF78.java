@@ -26,13 +26,13 @@ public class MSF78 extends MSSchedule {
         {
           add("Advisory (VII/VIII)"); // Advisory.
           add("DEAR VII / Arts VIII");
-          add(blocksToday.get(1));
+          add(blocksToday.get(0));
           add("Snack (VII/VIII)");  // Snack.
-          add(blocksToday.get(2));
-          add(blocksToday.get(3));  // 3rd period.
-          add(blocksToday.get(4));  // 4th period.
+          add(blocksToday.get(1));
+          add(blocksToday.get(2));  // 3rd period.
+          add(blocksToday.get(3));  // 4th period.
           add("Lunch (VII/VIII)");  // Lunch.
-          add(blocksToday.get(5));  // 5th period.
+          add(blocksToday.get(4));  // 5th period.
         }
       };
       printSummary();

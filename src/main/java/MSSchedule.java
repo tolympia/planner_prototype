@@ -5,9 +5,11 @@ import java.time.*;
 public abstract class MSSchedule extends Schedule {
   protected int[] DAY_TYPES = {1, 2, 3, 4, 5, 6};  // e.g., Day 1 in Planner.
 
-  // Jan. 7 is a Day 1.
   public static LocalDate firstDayOfSchool = LocalDate.of(2022, Month.SEPTEMBER, 6);
-  public static LocalDate lastDayOfSchool = LocalDate.of(2022, Month.NOVEMBER, 18);
+
+  // Last day of Trimester 1.
+  // public static LocalDate lastDayOfSchool = LocalDate.of(2022, Month.NOVEMBER, 18);
+  public static LocalDate lastDayOfSchool = LocalDate.of(2023, Month.JUNE,1);
 
   public MSSchedule(LocalDate date) {
     this.date = date;
