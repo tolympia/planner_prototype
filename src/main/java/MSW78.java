@@ -11,7 +11,7 @@ public class MSW78 extends MSSchedule {
         add(new Block(LocalTime.of(8, 45), 10));   // Advisory.
         add(new Block(LocalTime.of(9, 00), 35));   // 1st period.
         add(new Block(LocalTime.of(9, 40), 35));  // 2nd period.
-        add(new Block(LocalTime.of(10, 20), 35));  // 3rd period.
+        add(new Block(LocalTime.of(10, 20), 40));  // 3rd period.
         add(new Block(LocalTime.of(11, 05), 10));  // Snack.
         add(new Block(LocalTime.of(11, 20), 35));  // 4th period.
         add(new Block(LocalTime.of(12, 00), 35));  // 5th period.

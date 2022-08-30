@@ -38,6 +38,7 @@ public abstract class MSSchedule extends Schedule {
       add(LocalDate.of(2023, Month.APRIL, 7));
       add(LocalDate.of(2023, Month.APRIL, 28));  // CHARTER DAY.
       add(LocalDate.of(2023, Month.MAY, 5));  // Field Day.
+      add(LocalDate.of(2023, Month.MAY, 29));  // Memorial Day.
     }
   };
 

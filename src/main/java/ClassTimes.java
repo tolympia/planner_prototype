@@ -56,15 +56,15 @@ public class ClassTimes {
     public static void main(String... args) throws IOException, GeneralSecurityException {
         String mode = args[0];
         if (mode.equals("delete")) {
-          deleteAllEvents();
+            deleteAllEvents();
         } else if (mode.equals("ms")) {
-          createMSEventsFromForm();
+            createMSEventsFromForm();
         } else if (mode.equals("us")) {
-          createUSEventsFromForm();
+            createUSEventsFromForm();
         } else if (mode.equals("days")) {
-          createDayEvents();
+            createDayEvents();
         } else {
-          System.out.println("Invalid mode given.");
+            System.out.println("Invalid mode given.");
         }
     }
 
@@ -105,56 +105,56 @@ public class ClassTimes {
     }
 
     private static Event setUpClassEvent(LocalDateTime unzonedStartTime, LocalDateTime unzonedEndTime, String className, String colorId) {
-      Instant startInstant = unzonedStartTime.atZone(ZoneId.of(TIMEZONE)).toInstant();
+        Instant startInstant = unzonedStartTime.atZone(ZoneId.of(TIMEZONE)).toInstant();
 
-      // Make a calendar event at that time.
-      Event event = new Event()
-              .setSummary(className)
-              .setDescription("");
+        // Make a calendar event at that time.
+        Event event = new Event()
+                .setSummary(className)
+                .setDescription("");
 
-      DateTime startDateTime = new DateTime(startInstant.toString());
-      EventDateTime start = new EventDateTime()
-              .setDateTime(startDateTime)
-              .setTimeZone(TIMEZONE);
-      event.setStart(start);
+        DateTime startDateTime = new DateTime(startInstant.toString());
+        EventDateTime start = new EventDateTime()
+                .setDateTime(startDateTime)
+                .setTimeZone(TIMEZONE);
+        event.setStart(start);
 
-      // TODO: Have the event end based on classMinutes duration.
-      Instant endInstant = unzonedEndTime.atZone(
-        ZoneId.of(TIMEZONE)).toInstant();
-      DateTime endDateTime = new DateTime(endInstant.toString());
-      EventDateTime end = new EventDateTime()
-              .setDateTime(endDateTime)
-              .setTimeZone(TIMEZONE);
-      event.setEnd(end);
-      if (colorId != "") {
-          event.setColorId(colorId);
-      }
+        // TODO: Have the event end based on classMinutes duration.
+        Instant endInstant = unzonedEndTime.atZone(
+                ZoneId.of(TIMEZONE)).toInstant();
+        DateTime endDateTime = new DateTime(endInstant.toString());
+        EventDateTime end = new EventDateTime()
+                .setDateTime(endDateTime)
+                .setTimeZone(TIMEZONE);
+        event.setEnd(end);
+        if (!colorId.equals("")) {
+            event.setColorId(colorId);
+        }
 
-      return event;
+        return event;
     }
 
     private static void actuallyCreateEvents(
             Calendar service, ArrayList<Event> allEvents,
-            String calendarId) throws IOException, GeneralSecurityException {
+            String calendarId) throws IOException {
         // Get this from Settings > Integrate calendar.
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Are you sure you want to create these " + allEvents.size() + " events? y for yes.");
+//        Scanner sc = new Scanner(System.in);
+//        System.out.println("Are you sure you want to create these " + allEvents.size() + " events? y for yes.");
         int counter = 0;
-        if (sc.nextLine().equals("y")) {
-          for (int i = 0; i < allEvents.size(); i++) {
-              if (counter % 10 == 1) {
-                  System.out.println(
-                          "Sleeping for 1 second to prevent exceeding rate limit.");
-                  // Note: If we create events too quickly in succession,
-                  // Google Calendar will interrupt our requests
-                  // (anti-spam mechanism probably?).
-                  sleep(1);
-              }
-              Event event = allEvents.get(i);
-              event = service.events().insert(calendarId, event).execute();
-              System.out.printf("Event created: %s\n", event.getHtmlLink());
-              counter++;
-          }
+        if (true) { // (sc.nextLine().equals("y")) {
+            for (int i = 0; i < allEvents.size(); i++) {
+                if (counter % 10 == 1) {
+                    System.out.println(
+                            "Sleeping for 1 second to prevent exceeding rate limit.");
+                    // Note: If we create events too quickly in succession,
+                    // Google Calendar will interrupt our requests
+                    // (anti-spam mechanism probably?).
+                    sleep(1);
+                }
+                Event event = allEvents.get(i);
+                event = service.events().insert(calendarId, event).execute();
+                System.out.printf("Event created: %s\n", event.getHtmlLink());
+                counter++;
+            }
         } else {
             System.out.println("Okay, never mind.");
         }
@@ -195,64 +195,70 @@ public class ClassTimes {
         } while (pageToken != null);
     }
 
-    private static ArrayList<ArrayList<String>> getDaysToBlocksMapping(String pathToCsv) throws IOException {
-      BufferedReader csvReader = new BufferedReader(new FileReader(pathToCsv));
-      ArrayList<ArrayList<String>> all = new ArrayList<>();
-      // Grades 5-6 have 8 total periods, grades 7-8 have 6.
-      int numDays = 6;
-      int numPeriods = 8;
-      for (int i = 0; i < numDays; i++) {
-        all.add(new ArrayList<String>());
-      }
-      String row = csvReader.readLine();
-      while (row != null) {
-          String[] tmp = row.split(",", -1);
-          if (tmp.length != numDays) {
-            System.out.println("!!!! invalid input schedule, should have " + numDays + " columns !!!!");
-          }
-          for (int i = 0; i < tmp.length; i++) {
-            all.get(i).add(tmp[i]);
-          }
-          row = csvReader.readLine();
-      }
-      for (int i = 0; i < numDays; i++) {
-        if (all.get(i).size() != numPeriods) {
-          System.out.println("!!!! invalid input schedule, should have " + numPeriods + "rows !!!!");
+    private static ArrayList<ArrayList<String>> getDaysToBlocksMapping(String pathToCsv, boolean sevenEight) throws IOException {
+        BufferedReader csvReader = new BufferedReader(new FileReader(pathToCsv));
+        ArrayList<ArrayList<String>> all = new ArrayList<>();
+        // Grades 5-6 have 8 total periods, grades 7-8 have 5.
+        int numPeriods;
+        if (sevenEight) {
+            numPeriods = 5;
+        } else {
+            numPeriods = 8;
         }
-      }
-      csvReader.close();
-      System.out.println(all);
-      return all;
+        int numDays = 6;
+        for (int i = 0; i < numDays; i++) {
+            all.add(new ArrayList<>());
+        }
+        String row = csvReader.readLine();
+        while (row != null) {
+            String[] tmp = row.split(",", -1);
+            if (tmp.length != numDays) {
+                System.out.println("!!!! invalid input schedule, should have " + numDays + " columns !!!!");
+            }
+            for (int i = 0; i < tmp.length; i++) {
+                all.get(i).add(tmp[i]);
+            }
+            row = csvReader.readLine();
+        }
+        for (int i = 0; i < numDays; i++) {
+            if (all.get(i).size() != numPeriods) {
+                System.out.println("!!!! invalid input schedule, should have " + numPeriods + "rows !!!!");
+                System.out.println(all.get(i));
+            }
+        }
+        csvReader.close();
+        System.out.println(all);
+        return all;
     }
 
     private static ArrayList<LocalDate> getSchoolDates(String division) throws IOException {
-      ArrayList<LocalDate> schoolDates = new ArrayList<>();
-      LocalDate thisDate, endDate;
-      if (division.equals("ms")) {
-        thisDate = MSSchedule.firstDayOfSchool;
-        endDate = MSSchedule.lastDayOfSchool;
-      } else {
-        thisDate = USSchedule.firstDayOfSchool;
-        endDate = USSchedule.lastDayOfSchool;
-      }
-      Schedule sch;
-      while (!thisDate.isAfter(endDate)) {  // Incl. of last day.
-        if (division.equals("us")) {
-          sch = getUSScheduleForDate(thisDate, true);
+        ArrayList<LocalDate> schoolDates = new ArrayList<>();
+        LocalDate thisDate, endDate;
+        if (division.equals("ms")) {
+            thisDate = MSSchedule.firstDayOfSchool;
+            endDate = MSSchedule.lastDayOfSchool;
         } else {
-          // TODO: Extract method.
-          ArrayList<ArrayList<String>> mapping = getDaysToBlocksMapping("example.csv");
-          sch = getMSScheduleForDate(thisDate, mapping, true);
+            thisDate = USSchedule.firstDayOfSchool;
+            endDate = USSchedule.lastDayOfSchool;
         }
-        if (sch != null) {  // This is a real school day.
-          schoolDates.add(thisDate);
+        Schedule sch;
+        while (!thisDate.isAfter(endDate)) {  // Incl. of last day.
+            if (division.equals("us")) {
+                sch = getUSScheduleForDate(thisDate, true);
+            } else {
+                // TODO: Extract method.
+                ArrayList<ArrayList<String>> mapping = getDaysToBlocksMapping("example.csv", true);
+                sch = getMSScheduleForDate(thisDate, mapping, true);
+            }
+            if (sch != null) {  // This is a real school day.
+                schoolDates.add(thisDate);
+            }
+            thisDate = thisDate.plusDays(1);
         }
-        thisDate = thisDate.plusDays(1);
-      }
 
-      System.out.println(
-              "Total number of school days in this semester: " + schoolDates.size());
-      return schoolDates;
+        System.out.println(
+                "Total number of school days in this semester: " + schoolDates.size());
+        return schoolDates;
     }
 
     public static void createUSEventsFromForm() throws IOException, GeneralSecurityException {
@@ -271,7 +277,7 @@ public class ClassTimes {
         if (username.equals("test")) {
             calendarId = TEST_CALENDAR_ID;
         } else if (username.equals("tina")) {
-          calendarId = TINAS_CALENDAR_ID;
+            calendarId = TINAS_CALENDAR_ID;
         } else {
             System.out.println("What's your calendar ID?");
             calendarId = sc.nextLine();
@@ -285,14 +291,14 @@ public class ClassTimes {
         ArrayList<Integer> upperOrUnder = new ArrayList<>();
         ArrayList<String> blocks = new ArrayList<>();
 
-        String pathToCsv = "courses.csv";
+        String pathToCsv = username + ".csv";
         BufferedReader csvReader = new BufferedReader(new FileReader(pathToCsv));
         String row = csvReader.readLine();  // Skip the header.
         while ((row = csvReader.readLine()) != null) {
             String[] data = row.split(",");
             blocks.add(data[0].toUpperCase());
             courseNames.add(data[1]);
-            if (data[2].equals("yes")) {
+            if (data[2].equals("yes") || data[2].equals("Yes")) {
                 upperOrUnder.add(2);
             } else {
                 upperOrUnder.add(1);
@@ -338,14 +344,14 @@ public class ClassTimes {
         boolean sevenEight = sc.nextLine().equals("y");
         System.out.println("Please enter filename where schedule is stored:");
         String form = sc.nextLine();
-        ArrayList<ArrayList<String>> daysToBlocks = getDaysToBlocksMapping(form);
+        ArrayList<ArrayList<String>> daysToBlocks = getDaysToBlocksMapping(form, sevenEight);
 
         ArrayList<Event> allEvents = new ArrayList<>();
         // Loop through each school date.
         for (LocalDate date : getSchoolDates("ms")) {
-          // TODO: Add color coding?
-          // Generate list of events (classes/blocks) to create for this day.
-          allEvents.addAll(generateMSEvents(date, sevenEight, daysToBlocks));
+            // TODO: Add color coding?
+            // Generate list of events (classes/blocks) to create for this day.
+            allEvents.addAll(generateMSEvents(date, sevenEight, daysToBlocks));
         }
         actuallyCreateEvents(service, allEvents, calendarId);
     }
@@ -429,10 +435,10 @@ public class ClassTimes {
         System.out.println(schoolDates);
 
         // Generate list of events to create.
-        ArrayList<Event> allEvents = new ArrayList<Event>();
+        ArrayList<Event> allEvents = new ArrayList<>();
         for (int i = 0; i < schoolDates.size(); i++) {
             LocalDate targetDate = schoolDates.get(i);
-            Schedule sch = getMSScheduleForDate(targetDate, getDaysToBlocksMapping("example.csv"), true);
+            Schedule sch = getMSScheduleForDate(targetDate, getDaysToBlocksMapping("example.csv", true), true);
             if (sch != null) {
                 System.out.println("That date is a Day " + sch.getDayType());
                 // Make a calendar event for that day.
@@ -455,117 +461,116 @@ public class ClassTimes {
     }
 
     private static ArrayList<Event> generateMSEvents(LocalDate targetDate, boolean sevenEight, ArrayList<ArrayList<String>> daysToBlocks) throws IOException {
-      ArrayList<Event> allEvents = new ArrayList<Event>();
-      MSSchedule sch = getMSScheduleForDate(targetDate, daysToBlocks, sevenEight);
-      System.out.println("That date is a Day " + sch.getDayType());
+        ArrayList<Event> allEvents = new ArrayList<Event>();
+        MSSchedule sch = getMSScheduleForDate(targetDate, daysToBlocks, sevenEight);
+        System.out.println("That date is a Day " + sch.getDayType());
 
-      // Loop through all the blocks for that day.
-      for (int i = 0; i < sch.blocksForDayType().size(); i++) {
-        String className = sch.blocksForDayType().get(i);
-        if (className != "") {
-          LocalDateTime unzonedStartTime = sch.getStart(targetDate, i);
-          LocalDateTime unzonedEndTime = sch.getEnd(targetDate, i);
-          String colorId = "";
-          allEvents.add(setUpClassEvent(unzonedStartTime, unzonedEndTime, className, colorId));
+        // Loop through all the blocks for that day.
+        for (int i = 0; i < sch.blocksForDayType().size(); i++) {
+            String className = sch.blocksForDayType().get(i);
+            if (className.length() > 0) {  // Could be empty string or null.
+                LocalDateTime unzonedStartTime = sch.getStart(targetDate, i);
+                LocalDateTime unzonedEndTime = sch.getEnd(targetDate, i);
+                String colorId = "";
+                allEvents.add(setUpClassEvent(unzonedStartTime, unzonedEndTime, className, colorId));
+            }
         }
-      }
 
-      System.out.println("Generated " + allEvents.size() + " total events.");
-      return allEvents;
+        System.out.println("Generated " + allEvents.size() + " total events.");
+        return allEvents;
     }
 
     private static ArrayList<Event> generateUSEvents(ArrayList<LocalDate> schoolDates, String block, String className, boolean upperclassmen, String colorId) {
-      ArrayList<Event> allEvents = new ArrayList<Event>();
-      for (int i = 0; i < schoolDates.size(); i++) {
-          LocalDate targetDate = schoolDates.get(i);
-          USSchedule sch = getUSScheduleForDate(targetDate, upperclassmen);
-          System.out.println("That date is a Day " + sch.getDayType());
-          if (sch.isThereBlockToday(block)) {
-              LocalDateTime unzonedStartTime = sch.getStart(targetDate, block);
-              LocalDateTime unzonedEndTime = sch.getEnd(targetDate, block);
-              allEvents.add(setUpClassEvent(unzonedStartTime, unzonedEndTime, className, colorId));
-          } else {
-              System.out.println("No " + block + " block class that day.");
-          }
-      }
+        ArrayList<Event> allEvents = new ArrayList<Event>();
+        for (int i = 0; i < schoolDates.size(); i++) {
+            LocalDate targetDate = schoolDates.get(i);
+            USSchedule sch = getUSScheduleForDate(targetDate, upperclassmen);
+            System.out.println("That date is a Day " + sch.getDayType());
+            if (sch.isThereBlockToday(block)) {
+                LocalDateTime unzonedStartTime = sch.getStart(targetDate, block);
+                LocalDateTime unzonedEndTime = sch.getEnd(targetDate, block);
+                allEvents.add(setUpClassEvent(unzonedStartTime, unzonedEndTime, className, colorId));
+            } else {
+                System.out.println("No " + block + " block class that day.");
+            }
+        }
 
-      System.out.println("Generated " + allEvents.size() + " total events.");
-      return allEvents;
+        System.out.println("Generated " + allEvents.size() + " total events.");
+        return allEvents;
     }
 
     public static USSchedule getUSScheduleForDate(LocalDate date, boolean upperclassmen) {
-      DayOfWeek day = date.getDayOfWeek();
+        DayOfWeek day = date.getDayOfWeek();
 
-      USSchedule schedule;
+        USSchedule schedule;
 
-      // Determine if this is an adjusted schedule day.
-      if (USSchedule.adjustedSchedules.containsKey(date)) {
-          String adjustedType = USSchedule.adjustedSchedules.get(date);
-          if (adjustedType.equals("Adjusted1")) {
-              schedule = new USAdjusted1(date, upperclassmen);
-          } else if (adjustedType.equals("Adjusted2")) {
-              schedule = new USAdjusted2(date, upperclassmen);
-          } else if (adjustedType.equals("USAdjustedArtsAssembly")) {
-              schedule = new USAdjustedArtsAssembly(date, upperclassmen);
-          } else if (adjustedType.equals("USAdjustedCommencement")) {
-              schedule = new USAdjustedCommencement(date, upperclassmen);
-          } else if (adjustedType.equals("USAdjustedHonors")) {
-              schedule = new USAdjustedHonors(date, upperclassmen);
-          } else if (adjustedType.equals("USAdjustedIngathering")) {
-              schedule = new USAdjustedIngathering(date, upperclassmen);
-          } else if (adjustedType.equals("USAdjustedMLK")) {
-              schedule = new USAdjustedMLK(date, upperclassmen);
-          } else if (adjustedType.equals("USAdjustedRehearsal")) {
-              schedule = new USAdjustedRehearsal(date, upperclassmen);
-          } else if (adjustedType.equals("USAdjustedWinterHoliday")) {
-              schedule = new USAdjustedWinterHoliday(date, upperclassmen);
-          } else {  // Treat as default.
-              schedule = new USAdjusted1(date, upperclassmen);
-          }
-      }
-      else {
-          boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
-          if (flexDay) {
-              schedule = new USFlexDay(date, upperclassmen);
-          } else if (day == DayOfWeek.FRIDAY) {
-              schedule = new USFriday(date, upperclassmen);
-          } else {  // Wed schedule
-              schedule = new USWednesday(date, upperclassmen);
-          }
-          if (schedule.getDayType() == -1) {
-              // Not a real school day.
-              return null;
-          }
-      }
-      return schedule;
+        // Determine if this is an adjusted schedule day.
+        if (USSchedule.adjustedSchedules.containsKey(date)) {
+            String adjustedType = USSchedule.adjustedSchedules.get(date);
+            if (adjustedType.equals("Adjusted1")) {
+                schedule = new USAdjusted1(date, upperclassmen);
+            } else if (adjustedType.equals("Adjusted2")) {
+                schedule = new USAdjusted2(date, upperclassmen);
+            } else if (adjustedType.equals("USAdjustedArtsAssembly")) {
+                schedule = new USAdjustedArtsAssembly(date, upperclassmen);
+            } else if (adjustedType.equals("USAdjustedCommencement")) {
+                schedule = new USAdjustedCommencement(date, upperclassmen);
+            } else if (adjustedType.equals("USAdjustedHonors")) {
+                schedule = new USAdjustedHonors(date, upperclassmen);
+            } else if (adjustedType.equals("USAdjustedIngathering")) {
+                schedule = new USAdjustedIngathering(date, upperclassmen);
+            } else if (adjustedType.equals("USAdjustedMLK")) {
+                schedule = new USAdjustedMLK(date, upperclassmen);
+            } else if (adjustedType.equals("USAdjustedRehearsal")) {
+                schedule = new USAdjustedRehearsal(date, upperclassmen);
+            } else if (adjustedType.equals("USAdjustedWinterHoliday")) {
+                schedule = new USAdjustedWinterHoliday(date, upperclassmen);
+            } else {  // Treat as default.
+                schedule = new USAdjusted1(date, upperclassmen);
+            }
+        } else {
+            boolean flexDay = day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY;
+            if (flexDay) {
+                schedule = new USFlexDay(date, upperclassmen);
+            } else if (day == DayOfWeek.FRIDAY) {
+                schedule = new USFriday(date, upperclassmen);
+            } else {  // Wed schedule
+                schedule = new USWednesday(date, upperclassmen);
+            }
+            if (schedule.getDayType() == -1) {
+                // Not a real school day.
+                return null;
+            }
+        }
+        return schedule;
     }
 
     // sevenEight == true for grades 7-8 schedule, false for grades 5-6
     public static MSSchedule getMSScheduleForDate(LocalDate date, ArrayList<ArrayList<String>> daysToBlocks, boolean sevenEight) {
-      MSSchedule schedule;
-      DayOfWeek day = date.getDayOfWeek();
+        MSSchedule schedule;
+        DayOfWeek day = date.getDayOfWeek();
 
-      if (sevenEight) {
-        if (day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY) {
-          schedule = new MSMTTh78(date, daysToBlocks);
-        } else if (day == DayOfWeek.FRIDAY) {
-          schedule = new MSF78(date, daysToBlocks);
-        } else {  // Wed schedule
-          schedule = new MSW78(date, daysToBlocks);
+        if (sevenEight) {
+            if (day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY) {
+                schedule = new MSMTTh78(date, daysToBlocks);
+            } else if (day == DayOfWeek.FRIDAY) {
+                schedule = new MSF78(date, daysToBlocks);
+            } else {  // Wed schedule
+                schedule = new MSW78(date, daysToBlocks);
+            }
+        } else {
+            if (day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY) {
+                schedule = new MSMTTh56(date, daysToBlocks);
+            } else if (day == DayOfWeek.FRIDAY) {
+                schedule = new MSF56(date, daysToBlocks);
+            } else {  // Wed schedule
+                schedule = new MSW56(date, daysToBlocks);
+            }
         }
-      } else {
-        if (day == DayOfWeek.MONDAY || day == DayOfWeek.TUESDAY || day == DayOfWeek.THURSDAY) {
-          schedule = new MSMTTh56(date, daysToBlocks);
-        } else if (day == DayOfWeek.FRIDAY) {
-          schedule = new MSF56(date, daysToBlocks);
-        } else {  // Wed schedule
-          schedule = new MSW56(date, daysToBlocks);
+        if (schedule.getDayType() == -1) {
+            // Not a real school day.
+            return null;
         }
-      }
-      if (schedule.getDayType() == -1) {
-        // Not a real school day.
-        return null;
-      }
-      return schedule;
+        return schedule;
     }
 }

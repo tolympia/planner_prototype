@@ -6,11 +6,11 @@ public abstract class USSchedule extends Schedule {
   protected String[] ALL_BLOCKS = {"A", "B", "C", "D", "E", "F", "G"};
   protected int NUM_BLOCKS_PER_DAY = 5;
   protected int[] DAY_TYPES = {1, 2, 3, 4, 5, 6, 7};  // e.g., Day 1 in Planner.
-  public static LocalDate firstDayOfSchool = LocalDate.of(2022, Month.SEPTEMBER, 12);
-//  public static LocalDate firstDayOfSchool = LocalDate.of(2023, Month.JANUARY, 25);
+//  public static LocalDate firstDayOfSchool = LocalDate.of(2022, Month.SEPTEMBER, 12);
+  public static LocalDate firstDayOfSchool = LocalDate.of(2023, Month.JANUARY, 25);
 
-  public static LocalDate lastDayOfSchool = LocalDate.of(2023, Month.JANUARY, 11);
-//  public static LocalDate lastDayOfSchool = LocalDate.of(2023, Month.MAY, 24);
+//  public static LocalDate lastDayOfSchool = LocalDate.of(2023, Month.JANUARY, 11);
+  public static LocalDate lastDayOfSchool = LocalDate.of(2023, Month.MAY, 24);
 
   public USSchedule(LocalDate date) {
     this.date = date;

@@ -9,11 +9,11 @@ public class MSW56 extends MSSchedule {
     this.blocks = new ArrayList<Block>() {
       {
         add(new Block(LocalTime.of(8, 45), 10));   // Advisory.
-        add(new Block(LocalTime.of(9, 00), 30));   // 1st period.
-        add(new Block(LocalTime.of(9, 35), 30));  // 2nd period.
-        add(new Block(LocalTime.of(10, 10), 15));  // Snack/recess.
-        add(new Block(LocalTime.of(10, 30), 30));  // 3rd.
-        add(new Block(LocalTime.of(11, 05), 35));  // 4th.
+        add(new Block(LocalTime.of(9, 00), 35));   // 1st period.
+        add(new Block(LocalTime.of(9, 40), 35));  // 2nd period.
+        add(new Block(LocalTime.of(10, 15), 10));  // Snack/recess.
+        add(new Block(LocalTime.of(10, 30), 35));  // 3rd.
+        add(new Block(LocalTime.of(11, 10), 35));  // 4th.
         add(new Block(LocalTime.of(11, 45), 35));  // Lunch.
         add(new Block(LocalTime.of(12, 25), 45));  // 5th.
         add(new Block(LocalTime.of(13, 15), 40));  // Assembly.
