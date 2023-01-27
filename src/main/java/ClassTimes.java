@@ -33,11 +33,12 @@ import java.io.FileReader;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit; // for `sleep`
 
 
 public class ClassTimes {
-    private static final String TINAS_CALENDAR_ID = "c_3u311s0vrhfpfubgs9p5jjhheg@group.calendar.google.com";
+    private static final String TINAS_CALENDAR_ID = "tzhu@greenwichacademy.org";
     private static final String TEST_CALENDAR_ID = "c_k5ih2v866kvl19bikes80u10sk@group.calendar.google.com";
     private static final String APPLICATION_NAME = "Google Calendar API Demo";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
@@ -71,9 +72,9 @@ public class ClassTimes {
     /**
      * Helper function for sleep functionality.
      */
-    private static void sleep(int s) {
+    private static void sleep(int ms) {
         try {
-            TimeUnit.SECONDS.sleep(s);
+            TimeUnit.MILLISECONDS.sleep(ms);
         } catch (InterruptedException ex) {
             System.out.println("ERROR: sleep call failed - why?");
         }
@@ -184,7 +185,7 @@ public class ClassTimes {
                     // Note: If we delete events too quickly in succession,
                     // Google Calendar will interrupt our requests
                     // (anti-spam mechanism probably?).
-                    sleep(1);
+                    sleep(1000);
                 }
                 String eventId = event.getId();
                 service.events().delete(calendarId, eventId).execute();
@@ -291,7 +292,7 @@ public class ClassTimes {
         ArrayList<Integer> upperOrUnder = new ArrayList<>();
         ArrayList<String> blocks = new ArrayList<>();
 
-        String pathToCsv = username + ".csv";
+        String pathToCsv = "schedules/" + username + ".csv";
         BufferedReader csvReader = new BufferedReader(new FileReader(pathToCsv));
         String row = csvReader.readLine();  // Skip the header.
         while ((row = csvReader.readLine()) != null) {
@@ -487,6 +488,8 @@ public class ClassTimes {
             USSchedule sch = getUSScheduleForDate(targetDate, upperclassmen);
             System.out.println("That date is a Day " + sch.getDayType());
             if (sch.isThereBlockToday(block)) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/YY");
+                System.out.println(targetDate.format(formatter));
                 LocalDateTime unzonedStartTime = sch.getStart(targetDate, block);
                 LocalDateTime unzonedEndTime = sch.getEnd(targetDate, block);
                 allEvents.add(setUpClassEvent(unzonedStartTime, unzonedEndTime, className, colorId));
