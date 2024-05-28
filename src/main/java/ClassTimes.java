@@ -248,7 +248,7 @@ public class ClassTimes {
                 sch = getUSScheduleForDate(thisDate, true);
             } else {
                 // TODO: Extract method.
-                ArrayList<ArrayList<String>> mapping = getDaysToBlocksMapping("example.csv", true);
+                ArrayList<ArrayList<String>> mapping = getDaysToBlocksMapping("schedules/example.csv", true);
                 sch = getMSScheduleForDate(thisDate, mapping, true);
             }
             if (sch != null) {  // This is a real school day.
@@ -439,7 +439,7 @@ public class ClassTimes {
         ArrayList<Event> allEvents = new ArrayList<>();
         for (int i = 0; i < schoolDates.size(); i++) {
             LocalDate targetDate = schoolDates.get(i);
-            Schedule sch = getMSScheduleForDate(targetDate, getDaysToBlocksMapping("example.csv", true), true);
+            Schedule sch = getMSScheduleForDate(targetDate, getDaysToBlocksMapping("schedules/example.csv", true), true);
             if (sch != null) {
                 System.out.println("That date is a Day " + sch.getDayType());
                 // Make a calendar event for that day.

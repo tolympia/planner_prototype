@@ -5,11 +5,8 @@ import java.time.*;
 public abstract class MSSchedule extends Schedule {
   protected int[] DAY_TYPES = {1, 2, 3, 4, 5, 6};  // e.g., Day 1 in Planner.
 
-  public static LocalDate firstDayOfSchool = LocalDate.of(2022, Month.SEPTEMBER, 6);
-
-  // Last day of Trimester 1.
-  // public static LocalDate lastDayOfSchool = LocalDate.of(2022, Month.NOVEMBER, 18);
-  public static LocalDate lastDayOfSchool = LocalDate.of(2023, Month.JUNE,1);
+  public static LocalDate firstDayOfSchool = LocalDate.of(2023, Month.SEPTEMBER, 5);
+  public static LocalDate lastDayOfSchool = LocalDate.of(2024, Month.MAY, 31);
 
   public MSSchedule(LocalDate date) {
     this.date = date;
@@ -19,38 +16,36 @@ public abstract class MSSchedule extends Schedule {
   // Dates where we don't have school.
   public static ArrayList<LocalDate> holidays = new ArrayList<LocalDate>() {
     {
-      // Semester 1.
-      add(LocalDate.of(2022, Month.SEPTEMBER, 26));
-      add(LocalDate.of(2022, Month.OCTOBER, 5));
-      add(LocalDate.of(2022, Month.OCTOBER, 10));
-      add(LocalDate.of(2022, Month.NOVEMBER, 23));
-      add(LocalDate.of(2022, Month.NOVEMBER, 24));
-      add(LocalDate.of(2022, Month.NOVEMBER, 25));
-      add(LocalDate.of(2023, Month.JANUARY, 2));
+      // Trimester 1.
+      add(LocalDate.of(2023, Month.SEPTEMBER, 25));
+      add(LocalDate.of(2023, Month.OCTOBER, 9));
+      add(LocalDate.of(2023, Month.NOVEMBER, 22));
+      add(LocalDate.of(2023, Month.NOVEMBER, 23));
+      add(LocalDate.of(2023, Month.NOVEMBER, 24));
+      add(LocalDate.of(2023, Month.NOVEMBER, 25));
 
-      // Semester 2.
-      add(LocalDate.of(2023, Month.JANUARY, 16));
-      add(LocalDate.of(2023, Month.JANUARY, 20));  // Parent-teacher conferences.
-      add(LocalDate.of(2023, Month.FEBRUARY, 16));
-      add(LocalDate.of(2023, Month.FEBRUARY, 17));
-      add(LocalDate.of(2023, Month.FEBRUARY, 20));
-      add(LocalDate.of(2023, Month.MARCH, 27));  // Alt. Learning Day
-      add(LocalDate.of(2023, Month.APRIL, 7));
-      add(LocalDate.of(2023, Month.APRIL, 28));  // CHARTER DAY.
-      add(LocalDate.of(2023, Month.MAY, 5));  // Field Day.
-      add(LocalDate.of(2023, Month.MAY, 29));  // Memorial Day.
+      add(LocalDate.of(2024, Month.JANUARY, 1));
+      add(LocalDate.of(2024, Month.JANUARY, 15));
+      add(LocalDate.of(2024, Month.JANUARY, 26));  // Parent-teacher conferences.
+      add(LocalDate.of(2024, Month.FEBRUARY, 15));
+      add(LocalDate.of(2024, Month.FEBRUARY, 16));
+      add(LocalDate.of(2024, Month.FEBRUARY, 19));
+      add(LocalDate.of(2024, Month.MARCH, 29));
+      add(LocalDate.of(2024, Month.APRIL, 26));  // CHARTER DAY.
+      add(LocalDate.of(2024, Month.MAY, 10));  // Field Day.
+      add(LocalDate.of(2024, Month.MAY, 27));  // Memorial Day.
     }
   };
 
   static {
-    // Winter break is December 19 to January 1.
-    LocalDate firstDayOfWinterBreak = LocalDate.of(2022, Month.DECEMBER, 19);
+    // Winter break is December 18 to January 1.
+    LocalDate firstDayOfWinterBreak = LocalDate.of(2023, Month.DECEMBER, 18);
     for (int i = 0; i < 7 * 2; i++) {
       holidays.add(firstDayOfWinterBreak.plusDays(i));
     }
 
-    // Spring break is March 13 to March 24.
-    LocalDate firstDayOfSpringBreak = LocalDate.of(2023, Month.MARCH, 13);
+    // Spring break is March 11 to March 22.
+    LocalDate firstDayOfSpringBreak = LocalDate.of(2024, Month.MARCH, 11);
     for (int i = 0; i < 7 * 2; i++) {
       holidays.add(firstDayOfSpringBreak.plusDays(i));
     }
